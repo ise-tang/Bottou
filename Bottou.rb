@@ -2,6 +2,7 @@ require 'rubygems'
 require 'twitter'
 require 'pp'
 require 'yaml'
+require 'natto'
 
 class Bottou
   # ログイン
@@ -49,4 +50,44 @@ class Bottou
                   {:in_reply_to_status => mention,
                    :in_reply_to_status_id => mention.id})
   end
+
+  def marukof_tweet
+    natto = Natto::MeCab.new
+    satoTweets = @client.user_timeline('itititk',
+                                        { count: 200,
+                                          :exclude_replies => true
+                                        })
+    maruko = []
+    satoTweets.each do |tweet|
+			next if tweet.text.include?('RT')
+			#p tweet.text
+			keitai = []
+			natto.parse(tweet.text.gsub(/http.+/, '')) do |n|
+				keitai << n.surface	
+			end
+			keitai.unshift('_B_')
+			keitai << '_E_'
+			keitai.size.times do |i|
+				maruko << [keitai[i], keitai[i+1]]
+
+				break if keitai[i+1] == '_E_'
+      end
+		end
+
+		twi = []
+    start = maruko.select {|m| m[0] == '_B_'}.sample
+	  result = select_maruko(maruko, start, twi)
+
+		twit =  result.map {|m| m[0]}.join
+	
+    puts "twi: #{twit}"
+		@client.update(twit)
+  end
+end
+
+def select_maruko(maruko, so, twi)
+	return twi if so != nil && so.last == '_E_'	
+	m = maruko.select {|ma| ma[0] == so[1] }.sample
+	twi << m
+  select_maruko(maruko, m, twi)
 end
