@@ -1,3 +1,5 @@
+# coding: UTF-8
+
 require 'rubygems'
 require 'twitter'
 require 'pp'
@@ -44,7 +46,7 @@ class Bottou
   def satoRT(mention)
 
     doc_file = "#{File.dirname(File.expand_path(__FILE__))}/doc/reply_doc.txt"
-    phrases = File.readlines(doc_file).each { |line| line.chomp! }
+    phrases = File.readlines(doc_file, encoding: 'UTF-8').each { |line| line.chomp! }
     phrase = phrases[rand(phrases.size)]
     @client.update("#{phrase} RT @#{mention.user.screen_name} #{mention.text}",
                   {:in_reply_to_status => mention,
