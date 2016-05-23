@@ -36,7 +36,7 @@ class Bottou
 
   def reply()
     lastMention = @client.mentions({ :count => 1 }).last
-    targetUser = %w[issei126 itititk __KRS__ ititititk aki_fc3s SnowMonkeyYu1 Sukonjp heizel_2525 yanma_sh mayucpo] 
+    targetUser = %w[issei126 itititk __KRS__ ititititk aki_fc3s SnowMonkeyYu1 Sukonjp heizel_2525 yanma_sh mayucpo asasasa2525 masaloop_S2S]
     #if lastMention.user.screen_name == 'issei126' then
     if targetUser.index(lastMention.user.screen_name) != nil then
       self.satoRT(lastMention)
