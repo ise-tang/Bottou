@@ -140,7 +140,7 @@ class Bottou
     client.userstream do |status|
       puts status.text
       puts status.user.screen_name 
-      if status.text.include?('@itititititk') && status.text.gsub('@itititititk', '').empty? && status.user.screen_name != 'itititititk'
+      if status.text.include?('@itititititk') && status.text.gsub('@itititititk', '').gsub(' ', '').gsub('　', '').empty? && status.user.screen_name != 'itititititk'
         puts "kara rip"
         @client.update("@#{status.user.screen_name} ",
                       {:in_reply_to_status => status,
