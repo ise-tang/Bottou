@@ -36,16 +36,38 @@ class Bottou
   end
 
   def reply()
-    lastMention = @client.mentions({ :count => 1 }).last
+    begin
+      last_reply_id = File.open('last_reply_id.txt') do |file|
+        file.read
+      end
+    rescue => e
+      puts e.message
+      last_reply_id = nil
+    end
+
+    if last_reply_id.nil?
+      mentions = @client.mentions_timeline({ :count => 1 })
+    else
+      mentions = @client.mentions_timeline({ :since_id => last_reply_id })
+    end
     targetUser = %w[issei126 itititk __KRS__ ititititk aki_fc3s SnowMonkeyYu1 Sukonjp heizel_2525 yanma_sh mayucpo asasasa2525 masaloop_S2S]
+    mentions.each {|m| puts m.text }
     #if lastMention.user.screen_name == 'issei126' then
-    if targetUser.index(lastMention.user.screen_name) != nil then
-      self.satoRT(lastMention)
+    mentions.each do |mention|
+      puts mention.text
+      if targetUser.index(mention.user.screen_name) != nil then
+        self.satoRT(mention)
+      end
+    end
+
+    unless mentions.last.nil?
+      File.open('last_reply_id.txt', 'w') do |file|
+        file.puts(mentions.last.id)
+      end
     end
   end
 
   def satoRT(mention)
-
     doc_file = "#{File.dirname(File.expand_path(__FILE__))}/doc/reply_doc.txt"
     phrases = File.readlines(doc_file, encoding: 'UTF-8').each { |line| line.chomp! }
     phrase = phrases[rand(phrases.size)]
