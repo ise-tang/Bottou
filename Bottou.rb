@@ -5,6 +5,7 @@ require 'twitter'
 require 'pp'
 require 'yaml'
 require 'natto'
+require 'csv'
 
 class Bottou
   # ログイン
@@ -55,26 +56,12 @@ class Bottou
 
   def marukof_tweet
     natto = Natto::MeCab.new
-    satoTweets = @client.user_timeline('itititk',
-                                        { count: 200,
-                                          :exclude_replies => true
-                                        })
-    maruko = []
-    satoTweets.each do |tweet|
-			next if tweet.text.include?('RT')
-			#p tweet.text
-			keitai = []
-			natto.parse(tweet.text.gsub(/http.+/, '').gsub(/@.+?/, '')) do |n|
-				keitai << n.surface	
-			end
-			keitai.unshift('_B_')
-			keitai << '_E_'
-			keitai.size.times do |i|
-				maruko << [keitai[i], keitai[i+1]]
 
-				break if keitai[i+1] == '_E_'
-      end
-		end
+    maruko = []
+
+    CSV.foreach("./doc/maruko_dic.txt") do |csv|
+      maruko << csv
+    end
 
 		twi = []
     start = maruko.select {|m| m[0] == '_B_'}.sample
@@ -85,6 +72,37 @@ class Bottou
     puts "twi: #{twit}"
 		@client.update(twit)
   end
+
+  def make_maruko_dic
+      natto = Natto::MeCab.new
+      satoTweets = @client.user_timeline('itititk',
+                                          { count: 50,
+                                            :exclude_replies => true
+                                          })
+      maruko = []
+      satoTweets.each do |tweet|
+        next if tweet.text.include?('RT')
+        #p tweet.text
+        keitai = []
+        natto.parse(tweet.text.gsub(/http.+/, '').gsub(/@.+?/, '')) do |n|
+          keitai << n.surface
+        end
+        keitai.unshift('_B_')
+        keitai << '_E_'
+        keitai.size.times do |i|
+          maruko << [keitai[i], keitai[i+1]]
+
+          break if keitai[i+1] == '_E_'
+        end
+      end
+
+      File.open("./doc/maruko_dic.txt", "a") do |file|
+        maruko.each do |m|
+          file.puts(m.join(','))
+        end
+      end
+
+  end
 end
 
 def select_maruko(maruko, so, twi)
@@ -93,3 +111,4 @@ def select_maruko(maruko, so, twi)
 	twi << m
   select_maruko(maruko, m, twi)
 end
+
