@@ -2,6 +2,7 @@
 
 require 'rubygems'
 require 'twitter'
+require 'tweetstream'
 require 'pp'
 require 'yaml'
 require 'natto'
@@ -124,6 +125,28 @@ class Bottou
         end
       end
 
+  end
+
+  def test_user_stream
+    TweetStream.configure do |config|
+      config.consumer_key = @token["consumer_key"]
+      config.consumer_secret = @token["consumer_secret"]
+      config.oauth_token = @token["access_token"]
+      config.oauth_token_secret = @token["access_token_secret"]
+      config.auth_method = :oauth
+    end 
+    client = TweetStream::Client.new
+
+    client.userstream do |status|
+      puts status.text
+      puts status.user.screen_name 
+      if status.text.include?('@itititititk') && status.text.gsub('@itititititk', '').empty? && status.user.screen_name != 'itititititk'
+        puts "kara rip"
+        @client.update("@#{status.user.screen_name} ",
+                      {:in_reply_to_status => status,
+                       :in_reply_to_status_id => status.id})
+      end
+    end
   end
 end
 
