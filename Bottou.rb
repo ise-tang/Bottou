@@ -56,6 +56,7 @@ class Bottou
     #if lastMention.user.screen_name == 'issei126' then
     mentions.each do |mention|
       puts mention.text
+      next if kara_reply?(mention)
       if targetUser.index(mention.user.screen_name) != nil then
         self.satoRT(mention)
       end
@@ -140,7 +141,7 @@ class Bottou
     client.userstream do |status|
       puts status.text
       puts status.user.screen_name 
-      if status.text.include?('@itititititk') && status.text.gsub('@itititititk', '').gsub(' ', '').gsub('　', '').empty? && status.user.screen_name != 'itititititk'
+      if kara_reply?(status)
         puts "kara rip"
         @client.update("@#{status.user.screen_name} ",
                       {:in_reply_to_status => status,
@@ -148,6 +149,10 @@ class Bottou
       end
     end
   end
+end
+
+def kara_reply?(status)
+  status.text.include?('@itititititk') && status.text.gsub('@itititititk', '').gsub(' ', '').gsub('　', '').empty? && status.user.screen_name != 'itititititk'
 end
 
 def select_maruko(maruko, so, twi)
