@@ -60,9 +60,9 @@ class Bottou
       end
     end
 
-    unless mentions.last.nil?
+    unless mentions.first.nil?
       File.open('last_reply_id.txt', 'w') do |file|
-        file.puts(mentions.last.id)
+        file.puts(mentions.first.id)
       end
     end
   end
