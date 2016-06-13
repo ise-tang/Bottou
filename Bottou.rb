@@ -11,7 +11,7 @@ require 'csv'
 class Bottou
   # ログイン
   def initialize 
-    @token = YAML.load_file("#{File.dirname(File.expand_path(__FILE__))}/Token.yml")[0]
+   @token = YAML.load_file("#{File.dirname(File.expand_path(__FILE__))}/Token.yml")[0]
     @client = Twitter::REST::Client.new do |config|
       config.consumer_key = @token["consumer_key"]
       config.consumer_secret = @token["consumer_secret"]
@@ -147,6 +147,13 @@ class Bottou
                       {:in_reply_to_status => status,
                        :in_reply_to_status_id => status.id})
       end
+
+      if towatowa?(status)
+        puts "kara rip"
+        @client.update("@#{status.user.screen_name} ( ‘д‘⊂彡☆))Д´) ﾊﾟｰﾝ",
+                      {:in_reply_to_status => status,
+                       :in_reply_to_status_id => status.id})
+      end
     end
   end
 end
@@ -155,10 +162,13 @@ def kara_reply?(status)
   status.text.include?('@itititititk') && status.text.gsub('@itititititk', '').gsub(' ', '').gsub('　', '').empty? && status.user.screen_name != 'itititititk'
 end
 
-def select_maruko(maruko, so, twi)
-	return twi if so != nil && so.last == '_E_'	
-	m = maruko.select {|ma| ma[0] == so[1] }.sample
-	twi << m
-  select_maruko(maruko, m, twi)
+def towatowa?(status)
+  status.text.include?('@itititititk') && status.text.include?('とゎとゎ') && status.user.screen_name != 'itititititk'
 end
 
+def select_maruko(maruko, so, twi)
+  return twi if !so.nil? && so.last == '_E_'
+  m = maruko.select { |ma| ma[0] == so[1] }.sample
+  twi << m
+  select_maruko(maruko, m, twi)
+end
