@@ -51,7 +51,7 @@ class Bottou
     else
       mentions = @client.mentions_timeline({ :since_id => last_reply_id })
     end
-    targetUser = %w[issei126 itititk __KRS__ ititititk aki_fc3s SnowMonkeyYu1 Sukonjp heizel_2525 yanma_sh mayucpo asasasa2525 masaloop_S2S goaa99 hito224]
+    targetUser = %w[issei126 itititk __KRS__ ititititk aki_fc3s SnowMonkeyYu1 Sukonjp heizel_2525 yanma_sh mayucpo asasasa2525 masaloop_S2S goaa99 hito224 gen_233]
     mentions.each {|m| puts m.text }
     #if lastMention.user.screen_name == 'issei126' then
     mentions.each do |mention|
