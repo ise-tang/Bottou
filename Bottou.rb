@@ -54,6 +54,12 @@ class Bottou
     targetUser = %w[issei126 itititk __KRS__ ititititk aki_fc3s SnowMonkeyYu1 Sukonjp heizel_2525 yanma_sh mayucpo asasasa2525 masaloop_S2S goaa99 hito224 gen_233]
     mentions.each {|m| puts m.text }
     #if lastMention.user.screen_name == 'issei126' then
+    unless mentions.first.nil?
+      File.open('last_reply_id.txt', 'w') do |file|
+        file.puts(mentions.first.id)
+      end
+    end
+
     mentions.each do |mention|
       puts mention.text
       next if kara_reply?(mention)
@@ -62,11 +68,6 @@ class Bottou
       end
     end
 
-    unless mentions.first.nil?
-      File.open('last_reply_id.txt', 'w') do |file|
-        file.puts(mentions.first.id)
-      end
-    end
   end
 
   def satoRT(mention)
