@@ -159,7 +159,7 @@ class Bottou
 end
 
 def kara_reply?(status)
-  status.text.include?('@itititititk') && status.text.gsub('@itititititk', '').gsub(' ', '').gsub('　', '').empty? && status.user.screen_name != 'itititititk'
+  status.text.include?('@itititititk') && status.text.gsub(/@\w+?[\s ]/, '').gsub(' ', '').gsub('　', '').empty? && status.user.screen_name != 'itititititk'
 end
 
 def towatowa?(status)
