@@ -137,8 +137,8 @@ class Bottou
       config.oauth_token_secret = @token["access_token_secret"]
       config.auth_method = :oauth
     end 
-    #client = TweetStream::Daemon.new('kara_reply')
-    client = TweetStream::Client.new
+    client = TweetStream::Daemon.new('kara_reply')
+    #client = TweetStream::Client.new
 
     client.userstream do |status|
       puts status.text
