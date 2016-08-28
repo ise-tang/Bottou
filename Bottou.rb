@@ -109,7 +109,7 @@ class Bottou
         next if tweet.text.include?('RT')
         #p tweet.text
         keitai = []
-        natto.parse(tweet.text.gsub(/http.+/, '').gsub(/@.+?/, '')) do |n|
+        natto.parse(tweet.text.gsub(/http.+/, '').gsub(/[@＠].+?/, '')) do |n|
           keitai << n.surface
         end
         keitai.unshift('_B_')
