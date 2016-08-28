@@ -137,14 +137,16 @@ class Bottou
       config.oauth_token_secret = @token["access_token_secret"]
       config.auth_method = :oauth
     end 
-    client = TweetStream::Daemon.new('kara_reply')
+    #client = TweetStream::Daemon.new('kara_reply')
+    client = TweetStream::Client.new
 
     client.userstream do |status|
       puts status.text
       puts status.user.screen_name 
+      puts kara_rip_to = "@#{status.user.screen_name} " + status.text.sub('@itititititk', '') + ' '
       if kara_reply?(status)
         puts "kara rip"
-        @client.update("@#{status.user.screen_name} ",
+        @client.update(kara_rip_to,
                       {:in_reply_to_status => status,
                        :in_reply_to_status_id => status.id})
       end
