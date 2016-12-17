@@ -7,6 +7,7 @@ require 'pp'
 require 'yaml'
 require 'natto'
 require 'csv'
+require 'cgi'
 
 class Bottou
   # ログイン
@@ -74,7 +75,7 @@ class Bottou
     doc_file = "#{File.dirname(File.expand_path(__FILE__))}/doc/reply_doc.txt"
     phrases = File.readlines(doc_file, encoding: 'UTF-8').each { |line| line.chomp! }
     phrase = phrases[rand(phrases.size)]
-    @client.update("#{phrase} RT @#{mention.user.screen_name} #{mention.text}",
+    @client.update("#{phrase} RT @#{mention.user.screen_name} #{CGI.unescapeHTML(mention.text)}",
                   {:in_reply_to_status => mention,
                    :in_reply_to_status_id => mention.id})
   end
