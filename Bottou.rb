@@ -96,7 +96,7 @@ class Bottou
 		twit =  result.map {|m| m[0]}.join
 	
     puts "twi: #{twit}"
-		@client.update(twit)
+    @client.update(CGI.unescapeHTML(twit))
   end
 
   def make_maruko_dic
