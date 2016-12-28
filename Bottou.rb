@@ -109,7 +109,7 @@ class Bottou
         puts e.message
         last_sato_tweet_id = nil
       end
-      option = { count: 100,
+      option = { count: 200,
                  :exclude_replies => true,
                }
       if (!last_sato_tweet_id.nil? && !last_sato_tweet_id.empty?)
@@ -127,7 +127,6 @@ class Bottou
       maruko = []
       satoTweets.each do |tweet|
         next if tweet.text.include?('RT')
-        #p tweet.text
         keitai = []
         natto.parse(tweet.text.gsub(/http.+/, '').gsub(/[@＠].+?/, '')) do |n|
           keitai << n.surface
