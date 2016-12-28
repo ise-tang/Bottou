@@ -126,7 +126,7 @@ class Bottou
       satoTweets = @client.user_timeline('itititk', option)
       maruko = []
       satoTweets.each do |tweet|
-        next if tweet.text.include?('RT')
+        next if tweet.text.include?('RT') || tweet.text.include?('"')
         keitai = []
         natto.parse(tweet.text.gsub(/http.+/, '').gsub(/[@＠].+?/, '')) do |n|
           keitai << n.surface
