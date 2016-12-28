@@ -109,16 +109,20 @@ class Bottou
         puts e.message
         last_sato_tweet_id = nil
       end
-      option = if (!last_sato_tweet_id.nil? && !last_sato_tweet_id.empty?)
-                 { count: 50,
-                   :exclude_replies => true,
-                   since_id: last_sato_tweet_id
-                 }
-               else
-                 { count: 50,
-                   :exclude_replies => true,
-                 }
-               end
+      option = { count: 100,
+                 :exclude_replies => true,
+               }
+      if (!last_sato_tweet_id.nil? && !last_sato_tweet_id.empty?)
+        option[:since_id] = last_sato_tweet_id
+      end
+
+      dic = {}
+      File.open("./doc/maruko_dic.txt", "r") do |file|
+        while line = file.gets
+          dic[line.chomp!] = ''
+         end
+      end
+
       satoTweets = @client.user_timeline('itititk', option)
       maruko = []
       satoTweets.each do |tweet|
@@ -131,7 +135,7 @@ class Bottou
         keitai.unshift('_B_')
         keitai << '_E_'
         keitai.size.times do |i|
-          maruko << [keitai[i], keitai[i+1]]
+          maruko << [keitai[i], keitai[i+1]] unless dic.has_key?([keitai[i], keitai[i+1]].join(','))
 
           break if keitai[i+1] == '_E_'
         end
