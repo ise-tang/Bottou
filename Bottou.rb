@@ -89,12 +89,12 @@ class Bottou
       maruko << csv
     end
 
-		twi = []
+    twi = []
     start = maruko.select {|m| m[0] == '_B_'}.sample
-	  result = select_maruko(maruko, start, twi)
+    result = select_maruko(maruko, start, twi)
 
-		twit =  result.map {|m| m[0]}.join
-	
+    twit =  result.map {|m| m[0]}.join
+
     puts "twi: #{twit}"
     @client.update(CGI.unescapeHTML(twit))
   end
