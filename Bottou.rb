@@ -101,10 +101,25 @@ class Bottou
 
   def make_maruko_dic
       natto = Natto::MeCab.new
-      satoTweets = @client.user_timeline('itititk',
-                                          { count: 50,
-                                            :exclude_replies => true
-                                          })
+      begin
+        last_sato_tweet_id = File.open('last_sato_tweet_id.txt') do |file|
+          file.read
+        end
+      rescue => e
+        puts e.message
+        last_sato_tweet_id = nil
+      end
+      option = if (!last_sato_tweet_id.nil? && !last_sato_tweet_id.empty?)
+                 { count: 50,
+                   :exclude_replies => true,
+                   since_id: last_sato_tweet_id
+                 }
+               else
+                 { count: 50,
+                   :exclude_replies => true,
+                 }
+               end
+      satoTweets = @client.user_timeline('itititk', option)
       maruko = []
       satoTweets.each do |tweet|
         next if tweet.text.include?('RT')
@@ -125,6 +140,12 @@ class Bottou
       File.open("./doc/maruko_dic.txt", "a") do |file|
         maruko.each do |m|
           file.puts(m.join(','))
+        end
+      end
+
+      unless satoTweets.last.nil?
+        File.open('last_sato_tweet_id.txt', 'w') do |file|
+          file.puts(satoTweets.first.id)
         end
       end
 
