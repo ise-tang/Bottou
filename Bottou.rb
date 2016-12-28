@@ -63,7 +63,7 @@ class Bottou
 
     mentions.each do |mention|
       puts mention.text
-      next if kara_reply?(mention)
+      next if kara_reply?(mention) || towatowa?(mention)
       if targetUser.index(mention.user.screen_name) != nil then
         self.satoRT(mention)
       end
