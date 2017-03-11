@@ -2,3 +2,4 @@ Token.yml
 .bundle
 doc/maruko_dic.txt
 last_reply_id.txt
+*.sw*

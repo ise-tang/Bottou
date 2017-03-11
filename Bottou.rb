@@ -10,6 +10,7 @@ require 'csv'
 require 'cgi'
 
 class Bottou
+  GOOGLE_SEARCH_URL_BASE="http://www.google.co.jp/search?q="
   # ログイン
   def initialize 
    @token = YAML.load_file("#{File.dirname(File.expand_path(__FILE__))}/Token.yml")[0]
@@ -182,8 +183,17 @@ class Bottou
                       {:in_reply_to_status => status,
                        :in_reply_to_status_id => status.id})
       end
+
+      if search?(status)
+        search_word = status.text.delete("[検索]").gsub(/@\w+/, '').strip
+        @client.update("@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}")
+      end
     end
   end
+end
+
+def search?(status)
+  status.text.include?('[検索]')
 end
 
 def kara_reply?(status)
