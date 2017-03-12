@@ -185,7 +185,7 @@ class Bottou
       end
 
       if search?(status)
-        search_word = status.text.delete("[検索]").gsub(/@\w+/, '').strip
+        search_word = status.text.gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
         @client.update("@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}")
       end
     end
@@ -193,7 +193,7 @@ class Bottou
 end
 
 def search?(status)
-  status.text.include?('[検索]')
+  status.text.match(/^RT.*/) == nil && status.text.match(/.*[\[|［]検索[\]|］]$/) != nil
 end
 
 def kara_reply?(status)
