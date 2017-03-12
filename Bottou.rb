@@ -8,6 +8,8 @@ require 'yaml'
 require 'natto'
 require 'csv'
 require 'cgi'
+require 'http'
+require 'json'
 
 class Bottou
   GOOGLE_SEARCH_URL_BASE="http://www.google.co.jp/search?q="
@@ -188,8 +190,41 @@ class Bottou
         search_word = status.text.gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
         @client.update("@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}")
       end
+
+      if weather?(status)
+        puts "weather"
+        begin
+          base_url = 'http://weather.livedoor.com/forecast/webservice/json/v1?city=%s'
+          weather_point = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/の天気教えて/, '').strip
+          
+          weather_info =  case weather_point
+                          when '東京'
+                            HTTP.get(base_url % '130010').to_s
+                          when '横浜'
+                            HTTP.get(base_url % '140010').to_s
+                          else
+                            ''
+                          end
+
+          if weather_info.empty?
+            @client.update("@#{status.user.screen_name} #{weather_point}はわからぬ。。。。。。。")
+          else
+            forecast = JSON.parse(weather_info)['forecasts'][1]
+
+            @client.update("@#{status.user.screen_name} 明日の#{weather_point}の天気は#{forecast['telop']}, 最高気温は#{forecast['temperature']['max']['celsius']}℃, 最低気温は#{forecast['temperature']['min']['celsius']}℃らしいです。。")
+
+          end
+        rescue => e
+          puts e.message
+          puts e.backtrace
+        end
+      end
     end
   end
+end
+
+def weather?(status)
+  status.text.match(/^RT.*/) == nil && status.text.match(/.*天気教えて$/) != nil
 end
 
 def search?(status)

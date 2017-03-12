@@ -7,3 +7,5 @@ gem 'tweetstream'
 
 gem 'natto'
 gem 'pry'
+
+gem 'http'
