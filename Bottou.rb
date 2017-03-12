@@ -202,6 +202,12 @@ class Bottou
                             HTTP.get(base_url % '130010').to_s
                           when '横浜'
                             HTTP.get(base_url % '140010').to_s
+                          when '金沢'
+                            HTTP.get(base_url % '170010').to_s
+                          when '千葉'
+                            HTTP.get(base_url % '120010').to_s
+                          when '大阪'
+                            HTTP.get(base_url % '270000').to_s
                           else
                             ''
                           end
