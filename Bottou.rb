@@ -187,7 +187,7 @@ class Bottou
       end
 
       if search?(status)
-        search_word = status.text.gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
+        search_word = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
         @client.update("@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}")
       end
 
@@ -195,7 +195,7 @@ class Bottou
         puts "weather"
         begin
           base_url = 'http://weather.livedoor.com/forecast/webservice/json/v1?city=%s'
-          weather_point = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/の天気教えて/, '').strip
+          weather_point = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[[:blank:]]/, '').gsub(/の?天気教えて/, '').strip
           
           weather_info =  case weather_point
                           when '東京'
@@ -217,7 +217,9 @@ class Bottou
           else
             forecast = JSON.parse(weather_info)['forecasts'][1]
 
-            @client.update("@#{status.user.screen_name} 明日の#{weather_point}の天気は#{forecast['telop']}, 最高気温は#{forecast['temperature']['max']['celsius']}℃, 最低気温は#{forecast['temperature']['min']['celsius']}℃らしいです。。")
+            @client.update("@#{status.user.screen_name} 明日の#{weather_point}の天気は#{forecast['telop']}, 最高気温は#{forecast['temperature']['max']['celsius']}℃, 最低気温は#{forecast['temperature']['min']['celsius']}℃らしいです。。",
+             {:in_reply_to_status => status,
+                       :in_reply_to_status_id => status.id})
 
           end
         rescue => e
@@ -230,7 +232,7 @@ class Bottou
 end
 
 def weather?(status)
-  status.text.match(/^RT.*/) == nil && status.text.match(/.*天気教えて$/) != nil
+  status.text.match(/^RT.*/) == nil && status.text.match(/.*天気.*教えて$/) != nil
 end
 
 def search?(status)
