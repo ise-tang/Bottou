@@ -11,6 +11,7 @@ require 'cgi'
 require 'http'
 require 'json'
 require './weather_forecast.rb'
+require './joke_answer.rb'
 
 class Bottou
   GOOGLE_SEARCH_URL_BASE="http://www.google.co.jp/search?q="
@@ -206,6 +207,25 @@ class Bottou
             @client.update("@#{status.user.screen_name} 明日の#{weather_point}の天気は#{forecast['telop']}, 最高気温は#{forecast['temperature']['max']['celsius']}℃, 最低気温は#{forecast['temperature']['min']['celsius']}℃らしいです。。",
              {:in_reply_to_status => status,
                        :in_reply_to_status_id => status.id})
+          end
+        rescue => e
+          puts e.message
+          puts e.backtrace
+        end
+      elsif JokeAnswer.match?(status)
+        begin
+          search_phrase = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[[:blank:]]/, '').gsub(/教えて/, '').strip
+          words = JokeAnswer.nouns(search_phrase)
+          joke_answer = JokeAnswer.associated_word(words)
+
+          if joke_answer.nil?
+            @client.update("@#{status.user.screen_name} #{search_phrase}は知らない子ですね",
+                 {:in_reply_to_status => status,
+                           :in_reply_to_status_id => status.id})
+          else
+            @client.update("@#{status.user.screen_name} #{search_phrase}は#{joke_answer}じゃないですかね",
+                 {:in_reply_to_status => status,
+                           :in_reply_to_status_id => status.id})
           end
         rescue => e
           puts e.message
