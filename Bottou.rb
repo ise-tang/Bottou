@@ -194,15 +194,22 @@ class Bottou
 
       if weather?(status)
         puts "weather"
-        weather_info = WeatherForecast.fetch_result(status)
-        if weather_info.empty?
-          @client.update("@#{status.user.screen_name} #{weather_point}はわからぬ。。。。。。。")
-        else
-          forecast = JSON.parse(weather_info)['forecasts'][1]
+        begin
+          weather_point = WeatherForecast.point(status)
+          weather_info = WeatherForecast.fetch_result(weather_point)
 
-          @client.update("@#{status.user.screen_name} 明日の#{weather_point}の天気は#{forecast['telop']}, 最高気温は#{forecast['temperature']['max']['celsius']}℃, 最低気温は#{forecast['temperature']['min']['celsius']}℃らしいです。。",
-           {:in_reply_to_status => status,
-                     :in_reply_to_status_id => status.id})
+          if weather_info.empty?
+            @client.update("@#{status.user.screen_name} #{weather_point}はわからぬ。。。。。。。")
+          else
+            forecast = JSON.parse(weather_info)['forecasts'][1]
+
+            @client.update("@#{status.user.screen_name} 明日の#{weather_point}の天気は#{forecast['telop']}, 最高気温は#{forecast['temperature']['max']['celsius']}℃, 最低気温は#{forecast['temperature']['min']['celsius']}℃らしいです。。",
+             {:in_reply_to_status => status,
+                       :in_reply_to_status_id => status.id})
+          end
+        rescue => e
+          puts e.message
+          puts e.backtrace
         end
       end
     end
