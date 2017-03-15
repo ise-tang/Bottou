@@ -12,6 +12,7 @@ require 'http'
 require 'json'
 require './weather_forecast.rb'
 require './joke_answer.rb'
+require './image_search.rb'
 
 class Bottou
   GOOGLE_SEARCH_URL_BASE="http://www.google.co.jp/search?q="
@@ -188,7 +189,23 @@ class Bottou
                        :in_reply_to_status_id => status.id})
       end
 
-      if search?(status)
+      if image_search?(status)
+        puts 'image_search'
+        begin
+          search_word = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/画像.*[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
+          response = ImageSearch.run(search_word)
+          img = Tempfile.open(['image', '.jpg'])
+          img.binmode
+          img.write(HTTP.get(response['items'][0]['link']).to_s)
+          img.rewind
+          p img.class
+          @client.update_with_media("@#{status.user.screen_name} #{search_word}の画像", img)
+          img.close
+        rescue => e
+          puts e.message
+          puts e.backtrace
+        end
+      elsif search?(status)
         search_word = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
         @client.update("@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}")
       end
@@ -242,6 +259,10 @@ end
 
 def search?(status)
   status.text.match(/^RT.*/) == nil && status.text.match(/.*[\[|［]検索[\]|］]$/) != nil
+end
+
+def image_search?(status)
+  status.text.match(/^ﾎﾞｯﾄｩ.*/) != nil && status.text.match(/.*画像.*[\[|［]検索[\]|］]$/) != nil
 end
 
 def kara_reply?(status)
