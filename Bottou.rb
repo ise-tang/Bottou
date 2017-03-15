@@ -194,13 +194,17 @@ class Bottou
         begin
           search_word = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/画像.*[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
           response = ImageSearch.run(search_word)
-          img = Tempfile.open(['image', '.jpg'])
-          img.binmode
-          img.write(HTTP.get(response['items'][0]['link']).to_s)
-          img.rewind
-          p img.class
-          @client.update_with_media("@#{status.user.screen_name} #{search_word}の画像", img)
-          img.close
+          if response['items'] == nil
+            @client.update("@#{status.user.screen_name} #{search_word}の画像はなかったです.. dev")
+          else
+            img = Tempfile.open(['image', '.jpg'])
+            img.binmode
+            img.write(HTTP.get(response['items'].sample['link']).to_s)
+            img.rewind
+            p img.class
+            @client.update_with_media("@#{status.user.screen_name} #{search_word}の画像 dev", img)
+            img.close
+          end
         rescue => e
           puts e.message
           puts e.backtrace
@@ -262,7 +266,7 @@ def search?(status)
 end
 
 def image_search?(status)
-  status.text.match(/^ﾎﾞｯﾄｩ.*/) != nil && status.text.match(/.*画像.*[\[|［]検索[\]|］]$/) != nil
+  status.text.match(/^RT.*/) == nil && status.text.match(/.*画像.*[\[|［]検索[\]|］]$/) != nil
 end
 
 def kara_reply?(status)
