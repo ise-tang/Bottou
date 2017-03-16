@@ -5,3 +5,4 @@ last_reply_id.txt
 *.sw*
 *.pid
 .env
+.DS_Store
