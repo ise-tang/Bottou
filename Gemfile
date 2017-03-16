@@ -9,3 +9,4 @@ gem 'natto'
 gem 'pry'
 
 gem 'http'
+gem 'dotenv'
