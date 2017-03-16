@@ -8,7 +8,7 @@ class JokeAnswer
   def self.run(word)
     snippet = self.get_snippet(word)
     res = self.keyword(snippet)
-    JSON.parse(res)['keywords'].sample.keys.first
+    JSON.parse(res)['keywords'].first.keys.first
   end
 
   def self.get_snippet(word)
