@@ -236,8 +236,7 @@ class Bottou
       elsif JokeAnswer.match?(status)
         begin
           search_phrase = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[[:blank:]]/, '').gsub(/教えて/, '').strip
-          words = JokeAnswer.nouns(search_phrase)
-          joke_answer = JokeAnswer.associated_word(words)
+          joke_answer = JokeAnswer.run(search_phrase)
 
           if joke_answer.nil?
             @client.update("@#{status.user.screen_name} #{search_phrase}は知らない子ですね",

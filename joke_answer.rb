@@ -1,25 +1,28 @@
-require 'natto'
-require "xmlrpc/client"
+require 'http'
+require 'dotenv/load'
 
 class JokeAnswer
-  def self.nouns(text)
-    natto = Natto::MeCab.new
+  SEARCH_URL_BASE="https://www.googleapis.com/customsearch/v1?key=#{ENV['GOOGLE_API_KEY']}&cx=#{ENV['ENGINE_ID']}&safe=high&q=%s"
+  KEYWORD_URL = "https://labs.goo.ne.jp/api/keyword"
 
-    nouns = []
-    natto.parse(text) do |n|
-      nouns << n.surface if n.feature.split(',')[0] == '名詞'
-    end 
-
-    return nouns
+  def self.run(word)
+    snippet = self.get_snippet(word)
+    res = self.keyword(snippet)
+    JSON.parse(res)['keywords'].sample.keys.first
   end
 
-  def self.associated_word(words)
-    server = XMLRPC::Client.new("d.hatena.ne.jp", "/xmlrpc")
-    result = server.call("hatena.getSimilarWord", {
-        "wordlist" => words
-    })
+  def self.get_snippet(word)
+    res = JSON.parse(HTTP.get(SEARCH_URL_BASE % URI.encode(word)).to_s)
+    res['items'].sample['snippet']
+  end
 
-    result['wordlist'].map {|v| v['word'] }.sample
+  def self.keyword(paragrah)
+    params = {
+      app_id: ENV['GOO_APP_ID'],
+      title: 'keyword',
+      body: paragrah,
+    }
+    HTTP.post(KEYWORD_URL, json: params)
   end
 
   def self.match?(status)
