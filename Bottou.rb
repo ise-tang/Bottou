@@ -202,7 +202,9 @@ class Bottou
             img.write(HTTP.get(response['items'].sample['link']).to_s)
             img.rewind
             p img.class
-            @client.update_with_media("@#{status.user.screen_name} #{search_word}の画像 ", img)
+            @client.update_with_media("@#{status.user.screen_name} #{search_word}の画像 ", img,
+                      {:in_reply_to_status => status,
+                       :in_reply_to_status_id => status.id})
             img.close
           end
         rescue => e
@@ -211,7 +213,9 @@ class Bottou
         end
       elsif search?(status)
         search_word = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
-        @client.update("@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}")
+        @client.update("@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}",
+                      {:in_reply_to_status => status,
+                       :in_reply_to_status_id => status.id})
       end
 
       if weather?(status)
@@ -221,7 +225,9 @@ class Bottou
           weather_info = WeatherForecast.fetch_result(weather_point)
 
           if weather_info.empty?
-            @client.update("@#{status.user.screen_name} #{weather_point}はわからぬ。。。。。。。")
+            @client.update("@#{status.user.screen_name} #{weather_point}はわからぬ。。。。。。。",
+                      {:in_reply_to_status => status,
+                       :in_reply_to_status_id => status.id})
           else
             forecast = JSON.parse(weather_info)['forecasts'][1]
 
