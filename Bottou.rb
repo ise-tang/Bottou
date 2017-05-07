@@ -1,7 +1,6 @@
 # coding: UTF-8
 
 require 'rubygems'
-require 'twitter'
 require 'tweetstream'
 require 'pp'
 require 'yaml'
@@ -15,21 +14,18 @@ require './joke_answer.rb'
 require './image_search.rb'
 
 class Bottou
+  attr_reader :client, :userstream_client
+
   GOOGLE_SEARCH_URL_BASE="http://www.google.co.jp/search?q="
-  # ログイン
-  def initialize 
-   @token = YAML.load_file("#{File.dirname(File.expand_path(__FILE__))}/Token.yml")[0]
-    @client = Twitter::REST::Client.new do |config|
-      config.consumer_key = @token["consumer_key"]
-      config.consumer_secret = @token["consumer_secret"]
-      config.access_token = @token["access_token"]
-      config.access_token_secret = @token["access_token_secret"]
-    end 
+
+  def initialize(twitter_rest_client, twitter_userstrem_client = nil)
+    @client = twitter_rest_client
+    @userstream_client = twitter_userstrem_client
   end
 
 # さとうさんのツイート取得
   def paku_twi()
-    satoTweets = @client.user_timeline('itititk',
+    satoTweets = client.user_timeline('itititk',
                                         { :count => rand(60),
                                           :exclude_replies => true
                                         })
@@ -37,7 +33,7 @@ class Bottou
     unless /[@|＠]/ =~ satoTweets.last.text then
       satoTweet = "#{satoTweets.last.text} http://twitter.com/#!/itititk/status/#{satoTweets.last.id}"
     #satoTweet = "#{satoTweets.last.text} ( tweeted at #{satoTweets.last.created_at} )"
-      @client.update(satoTweet);
+      client.update(satoTweet);
     else
       self.paku_twi()
     end
@@ -54,9 +50,9 @@ class Bottou
     end
 
     if last_reply_id.nil?
-      mentions = @client.mentions_timeline({ :count => 1 })
+      mentions = client.mentions_timeline({ :count => 1 })
     else
-      mentions = @client.mentions_timeline({ :since_id => last_reply_id })
+      mentions = client.mentions_timeline({ :since_id => last_reply_id })
     end
     targetUser = %w[issei126 itititk __KRS__ ititititk aki_fc3s SnowMonkeyYu1 Sukonjp heizel_2525 yanma_sh mayucpo asasasa2525 masaloop_S2S goaa99 hito224 gen_233 mi3pu]
     mentions.each {|m| puts m.text }
@@ -81,7 +77,7 @@ class Bottou
     doc_file = "#{File.dirname(File.expand_path(__FILE__))}/doc/reply_doc.txt"
     phrases = File.readlines(doc_file, encoding: 'UTF-8').each { |line| line.chomp! }
     phrase = phrases[rand(phrases.size)]
-    @client.update("#{phrase} RT @#{mention.user.screen_name} #{CGI.unescapeHTML(mention.text)}",
+    client.update("#{phrase} RT @#{mention.user.screen_name} #{CGI.unescapeHTML(mention.text)}",
                   {:in_reply_to_status => mention,
                    :in_reply_to_status_id => mention.id})
   end
@@ -102,7 +98,7 @@ class Bottou
     twit =  result.map {|m| m[0]}.join
 
     puts "twi: #{twit}"
-    @client.update(CGI.unescapeHTML(twit))
+    client.update(CGI.unescapeHTML(twit))
   end
 
   def make_maruko_dic
@@ -129,7 +125,7 @@ class Bottou
          end
       end
 
-      satoTweets = @client.user_timeline('itititk', option)
+      satoTweets = client.user_timeline('itititk', option)
       maruko = []
       satoTweets.each do |tweet|
         next if tweet.text.include?('RT') || tweet.text.include?('"')
@@ -160,31 +156,21 @@ class Bottou
 
   end
 
-  def test_user_stream
-    TweetStream.configure do |config|
-      config.consumer_key = @token["consumer_key"]
-      config.consumer_secret = @token["consumer_secret"]
-      config.oauth_token = @token["access_token"]
-      config.oauth_token_secret = @token["access_token_secret"]
-      config.auth_method = :oauth
-    end 
-    client = TweetStream::Daemon.new('kara_reply')
-    #client = TweetStream::Client.new
-
-    client.userstream do |status|
+  def userstream
+    userstream_client.userstream do |status|
       puts status.text
-      puts status.user.screen_name 
+      puts status.user.screen_name
       puts kara_rip_to = "@#{status.user.screen_name} " + status.text.sub('@itititititk', '') + ' '
       if kara_reply?(status)
         puts "kara rip"
-        @client.update(kara_rip_to,
+        client.update(kara_rip_to,
                       {:in_reply_to_status => status,
                        :in_reply_to_status_id => status.id})
       end
 
       if towatowa?(status)
         puts "kara rip"
-        @client.update("@#{status.user.screen_name} ( ‘д‘⊂彡☆))Д´) ﾊﾟｰﾝ",
+        client.update("@#{status.user.screen_name} ( ‘д‘⊂彡☆))Д´) ﾊﾟｰﾝ",
                       {:in_reply_to_status => status,
                        :in_reply_to_status_id => status.id})
       end
@@ -195,14 +181,14 @@ class Bottou
           search_word = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/画像.*[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
           response = ImageSearch.run(search_word)
           if response['items'] == nil
-            @client.update("@#{status.user.screen_name} #{search_word}の画像はなかったです.. ")
+            client.update("@#{status.user.screen_name} #{search_word}の画像はなかったです.. ")
           else
             img = Tempfile.open(['image', '.jpg'])
             img.binmode
             img.write(HTTP.get(response['items'].sample['link']).to_s)
             img.rewind
             p img.class
-            @client.update_with_media("@#{status.user.screen_name} #{search_word}の画像 ", img,
+            client.update_with_media("@#{status.user.screen_name} #{search_word}の画像 ", img,
                       {:in_reply_to_status => status,
                        :in_reply_to_status_id => status.id})
             img.close
@@ -213,7 +199,7 @@ class Bottou
         end
       elsif search?(status)
         search_word = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
-        @client.update("@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}",
+        client.update("@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}",
                       {:in_reply_to_status => status,
                        :in_reply_to_status_id => status.id})
       end
@@ -225,13 +211,13 @@ class Bottou
           weather_info = WeatherForecast.fetch_result(weather_point)
 
           if weather_info.empty?
-            @client.update("@#{status.user.screen_name} #{weather_point}はわからぬ。。。。。。。",
+            client.update("@#{status.user.screen_name} #{weather_point}はわからぬ。。。。。。。",
                       {:in_reply_to_status => status,
                        :in_reply_to_status_id => status.id})
           else
             forecast = JSON.parse(weather_info)['forecasts'][1]
 
-            @client.update("@#{status.user.screen_name} 明日の#{weather_point}の天気は#{forecast['telop']}, 最高気温は#{forecast['temperature']['max']['celsius']}℃, 最低気温は#{forecast['temperature']['min']['celsius']}℃らしいです。。",
+            client.update("@#{status.user.screen_name} 明日の#{weather_point}の天気は#{forecast['telop']}, 最高気温は#{forecast['temperature']['max']['celsius']}℃, 最低気温は#{forecast['temperature']['min']['celsius']}℃らしいです。。",
              {:in_reply_to_status => status,
                        :in_reply_to_status_id => status.id})
           end
@@ -245,11 +231,11 @@ class Bottou
           joke_answer = JokeAnswer.run(search_phrase)
 
           if joke_answer.nil?
-            @client.update("@#{status.user.screen_name} #{search_phrase}は知らない子ですね",
+            client.update("@#{status.user.screen_name} #{search_phrase}は知らない子ですね",
                  {:in_reply_to_status => status,
                            :in_reply_to_status_id => status.id})
           else
-            @client.update("@#{status.user.screen_name} #{search_phrase}は#{joke_answer}じゃないですかね",
+            client.update("@#{status.user.screen_name} #{search_phrase}は#{joke_answer}じゃないですかね",
                  {:in_reply_to_status => status,
                            :in_reply_to_status_id => status.id})
           end
