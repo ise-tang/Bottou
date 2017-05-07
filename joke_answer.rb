@@ -25,8 +25,4 @@ class JokeAnswer
     HTTP.post(KEYWORD_URL, json: params)
   end
 
-  def self.match?(status)
-    status.text.match(/^RT.*/) == nil && status.text.match(/.*教えて$/) != nil
-  end
-
 end

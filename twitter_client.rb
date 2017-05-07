@@ -23,7 +23,7 @@ class TwitterClient
       config.auth_method = :oauth
     end
 
-    #TweetStream::Daemon.new('bottou_stream')
-    TweetStream::Client.new
+    TweetStream::Daemon.new('bottou_stream')
+    #TweetStream::Client.new
   end
 end
