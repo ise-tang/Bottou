@@ -10,11 +10,10 @@ require './weather_forecast.rb'
 require './joke_answer.rb'
 require './image_search.rb'
 require './markov.rb'
+require './tweet_pattern_factory.rb'
 
 class Bottou
   attr_reader :client, :userstream_client
-
-  GOOGLE_SEARCH_URL_BASE="http://www.google.co.jp/search?q="
 
   def initialize(twitter_rest_client, twitter_userstrem_client = nil)
     @client = twitter_rest_client
@@ -88,112 +87,35 @@ class Bottou
 
   def userstream
     userstream_client.userstream do |status|
-      puts status.text
       puts status.user.screen_name
-      puts kara_rip_to = "@#{status.user.screen_name} " + status.text.sub('@itititititk', '') + ' '
-      if kara_reply?(status)
-        puts "kara rip"
-        client.update(kara_rip_to,
-                      {:in_reply_to_status => status,
-                       :in_reply_to_status_id => status.id})
-      end
-
-      if towatowa?(status)
-        puts "kara rip"
-        client.update("@#{status.user.screen_name} ( ‘д‘⊂彡☆))Д´) ﾊﾟｰﾝ",
-                      {:in_reply_to_status => status,
-                       :in_reply_to_status_id => status.id})
-      end
-
-      if image_search?(status)
-        puts 'image_search'
-        begin
-          search_word = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/画像.*[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
-          response = ImageSearch.run(search_word)
-          if response['items'] == nil
-            client.update("@#{status.user.screen_name} #{search_word}の画像はなかったです.. ")
-          else
-            img = Tempfile.open(['image', '.jpg'])
-            img.binmode
-            img.write(HTTP.get(response['items'].sample['link']).to_s)
-            img.rewind
-            p img.class
-            client.update_with_media("@#{status.user.screen_name} #{search_word}の画像 ", img,
-                      {:in_reply_to_status => status,
-                       :in_reply_to_status_id => status.id})
-            img.close
-          end
-        rescue => e
-          puts e.message
-          puts e.backtrace
-        end
-      elsif search?(status)
-        search_word = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
-        client.update("@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}",
-                      {:in_reply_to_status => status,
-                       :in_reply_to_status_id => status.id})
-      end
-
-      if weather?(status)
-        puts "weather"
-        begin
-          weather_point = WeatherForecast.point(status)
-          weather_info = WeatherForecast.fetch_result(weather_point)
-
-          if weather_info.empty?
-            client.update("@#{status.user.screen_name} #{weather_point}はわからぬ。。。。。。。",
-                      {:in_reply_to_status => status,
-                       :in_reply_to_status_id => status.id})
-          else
-            forecast = JSON.parse(weather_info)['forecasts'][1]
-
-            client.update("@#{status.user.screen_name} 明日の#{weather_point}の天気は#{forecast['telop']}, 最高気温は#{forecast['temperature']['max']['celsius']}℃, 最低気温は#{forecast['temperature']['min']['celsius']}℃らしいです。。",
-             {:in_reply_to_status => status,
-                       :in_reply_to_status_id => status.id})
-          end
-        rescue => e
-          puts e.message
-          puts e.backtrace
-        end
-      elsif JokeAnswer.match?(status)
-        begin
-          search_phrase = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[[:blank:]]/, '').gsub(/教えて/, '').strip
-          joke_answer = JokeAnswer.run(search_phrase)
-
-          if joke_answer.nil?
-            client.update("@#{status.user.screen_name} #{search_phrase}は知らない子ですね",
-                 {:in_reply_to_status => status,
-                           :in_reply_to_status_id => status.id})
-          else
-            client.update("@#{status.user.screen_name} #{search_phrase}は#{joke_answer}じゃないですかね",
-                 {:in_reply_to_status => status,
-                           :in_reply_to_status_id => status.id})
-          end
-        rescue => e
-          puts e.message
-          puts e.backtrace
-        end
+      puts status.text
+      begin
+        tweet_pattern = TweetPatternFactory.build(status)
+        post_tweet(status, tweet_pattern) unless tweet_pattern.nil?
+      rescue => e
+        puts e.message
       end
     end
   end
-end
 
-def weather?(status)
-  status.text.match(/^RT.*/) == nil && status.text.match(/.*天気.*教えて$/) != nil
-end
+  private
 
-def search?(status)
-  status.text.match(/^RT.*/) == nil && status.text.match(/.*[\[|［]検索[\]|］]$/) != nil
-end
+  def post_tweet(status, tweet_pattern)
+    unless tweet_pattern.image.nil?
+      client.update_with_media(
+        tweet_pattern.tweet,
+        tweet_pattern.image,
+        in_reply_to_status: status,
+        in_reply_to_status_id: status.id
+      )
+      tweet_pattern.image.close
+      return
+    end
 
-def image_search?(status)
-  status.text.match(/^RT.*/) == nil && status.text.match(/.*画像.*[\[|［]検索[\]|］]$/) != nil
-end
-
-def kara_reply?(status)
-  status.text.include?('@itititititk') && status.text.gsub(/@\w+/, '').gsub(' ', '').gsub('　', '').empty? && status.user.screen_name != 'itititititk'
-end
-
-def towatowa?(status)
-  status.text.include?('@itititititk') && status.text.include?('とゎとゎ') && status.user.screen_name != 'itititititk'
+    client.update(
+      tweet_pattern.tweet,
+      in_reply_to_status: status,
+      in_reply_to_status_id: status.id
+    )
+  end
 end

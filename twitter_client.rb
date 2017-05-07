@@ -1,4 +1,5 @@
 require 'twitter'
+require 'tweetstream'
 require 'yaml'
 
 class TwitterClient
@@ -22,7 +23,7 @@ class TwitterClient
       config.auth_method = :oauth
     end
 
-    #TweetStream::Daemon.new('kara_reply')
+    #TweetStream::Daemon.new('bottou_stream')
     TweetStream::Client.new
   end
 end
