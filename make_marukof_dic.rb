@@ -1,7 +1,7 @@
-require "./Bottou.rb"
+require "./markov.rb"
+require "./twitter_client.rb"
 
-b =  Bottou.new
+client = TwitterClient.rest_client
+m = Markov.new(client)
 
-
-b.make_maruko_dic
-
+m.make_markov_dic

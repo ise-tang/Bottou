@@ -1,4 +1,5 @@
 require 'twitter'
+require 'yaml'
 
 class TwitterClient
   TOKEN = YAML.load_file("#{File.dirname(File.expand_path(__FILE__))}/Token.yml")[0]
