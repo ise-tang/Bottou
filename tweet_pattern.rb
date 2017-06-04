@@ -67,32 +67,25 @@ class ImageSearchReply < TweetPattern
 
   def initialize(status)
     @search_word = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/画像.*[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
-    @response = ImageSearch.run(search_word)
+    @responses = ImageSearch.run(search_word)
+    @post_image = random_image_pickup
     super
   end
 
+  def random_image_pickup
+    return nil if @responses['items'] == nil
+
+    @responses['items'].sample
+  end
+
   def build_tweet(status)
-    if response['items'] == nil
+    if @post_image.nil?
       "@#{status.user.screen_name} #{search_word}の画像はなかったです.. "
     else
-      "@#{status.user.screen_name} #{search_word}の画像 "
+      "@#{status.user.screen_name} #{search_word}の画像 #{@post_image['link'].to_s} 掲載元: #{@post_image['image']['contextLink']}"
     end
   end
 
-  def build_image(status)
-    begin
-      return nil if response['items'] == nil
-
-      img = Tempfile.open(['image', '.jpg'])
-      img.binmode
-      img.write(HTTP.get(response['items'].sample['link']).to_s)
-      img.rewind
-      img
-    rescue => e
-      puts "build_image error"
-      puts e.message
-    end
-  end
 end
 
 class SearchReply < TweetPattern
