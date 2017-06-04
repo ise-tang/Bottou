@@ -82,10 +82,22 @@ class ImageSearchReply < TweetPattern
     if @post_image.nil?
       "@#{status.user.screen_name} #{search_word}の画像はなかったです.. "
     else
-      "@#{status.user.screen_name} #{search_word}の画像 #{@post_image['link'].to_s} 掲載元: #{@post_image['image']['contextLink']}"
+      "@#{status.user.screen_name} #{search_word}の画像 掲載元: #{@post_image['image']['contextLink']}"
     end
   end
 
+  def build_image(status)
+    begin
+     img = Tempfile.open(['image', '.jpg'])
+     img.binmode
+     img.write(HTTP.get(@post_image['link']).to_s)
+      img.rewind
+      img
+    rescue => e
+      puts "build_image error"
+      puts e.message
+    end
+  end
 end
 
 class SearchReply < TweetPattern
