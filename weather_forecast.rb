@@ -28,24 +28,31 @@ class WeatherForecast
                   "鹿屋"=>"460020", "種子島"=>"460030", "名瀬"=>"460040", "那覇"=>"471010", "名護"=>"471020",
                   "久米島"=>"471030", "南大東"=>"472000", "宮古島"=>"473000", "石垣島"=>"474010", "与那国島"=>"474020"} 
 
-  def self.point(status)
-    status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[今|明]日の/, '').gsub(/[[:blank:]]/, '').gsub(/の?天気教えて/, '').strip
+  attr_reader :point
+
+  def initialize(status)
+    @status = status
+    @point = point
   end
 
-  def self.fetch_result(weather_point)
+  def point
+    @status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[今|明]日の/, '').gsub(/[[:blank:]]/, '').gsub(/の?天気教えて/, '').strip
+  end
+
+  def fetch_result
       begin
         base_url = 'http://weather.livedoor.com/forecast/webservice/json/v1?city=%s'
-        
-        weather_info =  if POINTS.has_key?(weather_point)
-                          HTTP.get(base_url % POINTS[weather_point]).to_s
-                        else
-                          ''
-                        end
+
+        weather_info = if POINTS.key?(@point)
+                         HTTP.get(base_url % POINTS[@point]).to_s
+                       else
+                         ''
+                       end
 
         return weather_info
       rescue => e
         puts e.message
         puts e.backtrace
       end
-    end
+  end
 end

@@ -119,11 +119,11 @@ class WeatherReply < TweetPattern
   end
 
   def build_tweet(status)
-    weather_point = WeatherForecast.point(status)
-    weather_info = WeatherForecast.fetch_result(weather_point)
+    weather_forecast = WeatherForecast.new(status)
+    weather_info = weather_forecast.fetch_result
 
     if weather_info.empty?
-      "@#{status.user.screen_name} #{weather_point}はわからぬ。。。。。。。"
+      "@#{status.user.screen_name} #{weather_forecast.point}はわからぬ。。。。。。。"
     else
       if status.text.include?('今日')
         forecast = JSON.parse(weather_info)['forecasts'][0]
@@ -134,7 +134,7 @@ class WeatherReply < TweetPattern
         day = "明日"
       end
 
-      tweet_holder(status, weather_point, forecast, day)
+      tweet_holder(status, weather_forecast.point, forecast, day)
     end
   end
 
