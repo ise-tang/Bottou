@@ -125,10 +125,24 @@ class WeatherReply < TweetPattern
     if weather_info.empty?
       "@#{status.user.screen_name} #{weather_point}はわからぬ。。。。。。。"
     else
-      forecast = JSON.parse(weather_info)['forecasts'][1]
+      if status.text.include?('今日')
+        forecast = JSON.parse(weather_info)['forecasts'][0]
+        day = "今日"
+        puts forecast
+      else
+        forecast = JSON.parse(weather_info)['forecasts'][1]
+        day = "明日"
+      end
 
-      "@#{status.user.screen_name} 明日の#{weather_point}の天気は#{forecast['telop']}, 最高気温は#{forecast['temperature']['max']['celsius']}℃, 最低気温は#{forecast['temperature']['min']['celsius']}℃らしいです。。"
+      tweet_holder(status, weather_point, forecast, day)
     end
+  end
+
+  def tweet_holder(status, point, forecast, day)
+    max_words = forecast['temperature']['max'].nil? ? "わからないです.." : "#{forecast['temperature']['max']['celsius']}℃"
+    min_words = forecast['temperature']['min'].nil? ? "わからない.." : "#{forecast['temperature']['min']['celsius']}℃"
+
+    "@#{status.user.screen_name} #{day}の#{point}の天気は#{forecast['telop']}, 最高気温は#{max_words}, 最低気温は#{min_words}らしいです。。"
   end
 end
 

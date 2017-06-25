@@ -29,7 +29,7 @@ class WeatherForecast
                   "久米島"=>"471030", "南大東"=>"472000", "宮古島"=>"473000", "石垣島"=>"474010", "与那国島"=>"474020"} 
 
   def self.point(status)
-    status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[[:blank:]]/, '').gsub(/の?天気教えて/, '').strip
+    status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[今|明]日の/, '').gsub(/[[:blank:]]/, '').gsub(/の?天気教えて/, '').strip
   end
 
   def self.fetch_result(weather_point)
