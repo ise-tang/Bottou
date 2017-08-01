@@ -38,7 +38,7 @@ class TweetPattern
   end
 
   def self.to_bottou(text)
-    text.match(/.*ﾎﾞｯﾄｩ|ｳ*/)
+    text.match(/.*ﾎﾞｯﾄｩ|ｳ.*/) != nil
   end
 end
 
