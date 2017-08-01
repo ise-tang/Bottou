@@ -12,6 +12,10 @@ class TweetPatternFactory
       return Towatowa.new(status)
     end
 
+    if CoinToss.match?(status)
+      return CoinToss.new(status)
+    end
+
     # ~ 検索のパターン
     if ImageSearchReply.match?(status)
       puts 'image_search'

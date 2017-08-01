@@ -36,6 +36,10 @@ class TweetPattern
   def self.not_RT(text)
     text.match(/^RT.*/) == nil 
   end
+
+  def self.to_bottou(text)
+    text.match(/.*ﾎﾞｯﾄｩ|ｳ*/)
+  end
 end
 
 class Towatowa < TweetPattern
@@ -160,5 +164,19 @@ class JokeAnswerReply < TweetPattern
     else
       "@#{status.user.screen_name} #{search_phrase}は#{joke_answer}じゃないですかね"
     end
+  end
+end
+
+class CoinToss < TweetPattern
+  def self.match?(status)
+    not_RT(status.text) && to_bottou(status.text) && !status.text.match(/.*コイン投げて$/).nil?
+  end
+
+  def build_tweet(status)
+    "@#{status.user.screen_name} #{coin_toss}でした。"
+  end
+
+  def coin_toss
+    ['表', '裏'].shuffle.shuffle.sample
   end
 end
