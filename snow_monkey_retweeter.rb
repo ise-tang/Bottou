@@ -1,6 +1,6 @@
 require("#{File.dirname(File.expand_path(__FILE__))}/twitter_client.rb")
 
-class SnowMonkeyRetweet
+class SnowMonkeyRetweeter
   THE_TWEET_ID = 246252965302775809
 
   def self.run
