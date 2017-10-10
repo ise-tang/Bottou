@@ -1,4 +1,5 @@
 require './image_search.rb'
+require './snow_monkey_retweeter.rb'
 require 'http'
 
 # base tweet pattern class
@@ -178,5 +179,16 @@ class CoinToss < TweetPattern
 
   def coin_toss
     ['表', '裏'].shuffle.shuffle.sample
+  end
+end
+
+class SnowMonkeyRetweet < TweetPattern
+  def self.match?(status)
+    not_RT(status.text) && to_bottou(status.text) && !status.text.match(/.*例のアレして$/).nil?
+  end
+
+  def build_tweet(status)
+    SnowMonkeyRetweeter.run
+    "@#{status.user.screen_name} ｳｽｼｬｽ。"
   end
 end

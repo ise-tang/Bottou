@@ -16,6 +16,10 @@ class TweetPatternFactory
       return CoinToss.new(status)
     end
 
+    if SnowMonkeyRetweet.match?(status)
+      return SnowMonkeyRetweet.new(status)
+    end
+
     # ~ 検索のパターン
     if ImageSearchReply.match?(status)
       puts 'image_search'
