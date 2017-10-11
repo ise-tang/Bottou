@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 ruby '2.2.3'
 
-gem 'twitter', git: "https://github.com/sferik/twitter.git", branch: "master"
+gem 'twitter'
 gem 'tweetstream'
 
 gem 'natto'
