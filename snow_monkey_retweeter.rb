@@ -1,4 +1,5 @@
 require("#{File.dirname(File.expand_path(__FILE__))}/twitter_client.rb")
+require("#{File.dirname(File.expand_path(__FILE__))}/unretweet_patch.rb")
 
 class SnowMonkeyRetweeter
   THE_TWEET_ID = 246252965302775809
