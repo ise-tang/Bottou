@@ -120,7 +120,7 @@ end
 
 class WeatherReply < TweetPattern
   def self.match?(status)
-    not_RT(status.text) && !status.text.match(/.*天気.*教えて$/).nil?
+    to_bottou(status.text) && not_RT(status.text) && !status.text.match(/.*天気.*教えて$/).nil?
   end
 
   def build_tweet(status)
@@ -153,7 +153,7 @@ end
 
 class JokeAnswerReply < TweetPattern
   def self.match?(status)
-    not_RT(status.text) && !status.text.match(/.*教えて$/).nil?
+    to_bottou(status.text) && not_RT(status.text) && !status.text.match(/.*教えて$/).nil?
   end
 
   def build_tweet(status)
