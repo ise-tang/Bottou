@@ -1,14 +1,22 @@
 require 'http'
 require 'dotenv/load'
+require 'natto'
 
 class JokeAnswer
   SEARCH_URL_BASE="https://www.googleapis.com/customsearch/v1?key=#{ENV['GOOGLE_API_KEY']}&cx=#{ENV['ENGINE_ID']}&safe=high&q=%s"
   KEYWORD_URL = "https://labs.goo.ne.jp/api/keyword"
 
-  def self.run(word)
-    snippet = self.get_snippet(word)
-    res = self.keyword(snippet)
-    JSON.parse(res)['keywords'].first.keys.first
+  def self.run(search_query)
+    words = wordlize(search_query)
+    p words
+    snippet = get_snippet(search_query)
+    res = keyword(snippet)
+    keys = JSON.parse(res)['keywords'].map { |hash| hash.keys.first }
+    keys.each do |key|
+      unless words.include?(key)
+        return key
+      end
+    end
   end
 
   def self.get_snippet(word)
@@ -25,4 +33,12 @@ class JokeAnswer
     HTTP.post(KEYWORD_URL, json: params)
   end
 
+  def self.wordlize(text)
+    words = []
+    natto = Natto::MeCab.new
+    natto.parse(text) do |n|
+      words << n.surface
+    end
+    words
+  end
 end
