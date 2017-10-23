@@ -75,7 +75,7 @@ class ImageSearchReply < TweetPattern
   end
 
   def initialize(status)
-    @search_word = remove_to_bottou(text).gsub(/画像.*[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
+    @search_word = remove_to_bottou(status.text).gsub(/画像.*[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
     @responses = ImageSearch.run(search_word)
     @post_image = random_image_pickup
     super
@@ -117,7 +117,7 @@ class SearchReply < TweetPattern
   end
 
   def build_tweet(status)
-    search_word = remove_to_bottou(text).gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
+    search_word = remove_to_bottou(status.text).gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
     "@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}"
   end
 end
@@ -161,7 +161,7 @@ class JokeAnswerReply < TweetPattern
   end
 
   def build_tweet(status)
-    search_phrase = remove_to_bottou(text).gsub(/[[:blank:]]/, '').gsub(/教えて/, '').strip
+    search_phrase = remove_to_bottou(status.text).gsub(/[[:blank:]]/, '').gsub(/教えて/, '').strip
     joke_answer = JokeAnswer.run(search_phrase)
 
     if joke_answer.nil?
