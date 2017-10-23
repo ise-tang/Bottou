@@ -24,7 +24,7 @@ class TweetPattern
     nil
   end
 
-  private
+  private_class_method
 
   def self.include_account?(text)
     text.include?('@itititititk')
@@ -40,6 +40,10 @@ class TweetPattern
 
   def self.to_bottou(text)
     text.match(/.*ﾎﾞｯﾄｩ|ｳ.*/) != nil
+  end
+
+  def self.remove_to_bottou(text)
+    text.gsub(/ﾎﾞｯﾄ[ｩ|ｳ]/, '')
   end
 end
 
@@ -71,7 +75,7 @@ class ImageSearchReply < TweetPattern
   end
 
   def initialize(status)
-    @search_word = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/画像.*[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
+    @search_word = remove_to_bottou(text).gsub(/画像.*[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
     @responses = ImageSearch.run(search_word)
     @post_image = random_image_pickup
     super
@@ -91,7 +95,7 @@ class ImageSearchReply < TweetPattern
     end
   end
 
-  def build_image(status)
+  def build_image(_status)
     begin
      img = Tempfile.open(['image', '.jpg'])
      img.binmode
@@ -113,7 +117,7 @@ class SearchReply < TweetPattern
   end
 
   def build_tweet(status)
-    search_word = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
+    search_word = remove_to_bottou(text).gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
     "@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}"
   end
 end
@@ -124,7 +128,7 @@ class WeatherReply < TweetPattern
   end
 
   def build_tweet(status)
-    weather_forecast = WeatherForecast.new(status)
+    weather_forecast = WeatherForecast.new(remove_to_bottou(status.text))
     weather_info = weather_forecast.fetch_result
 
     if weather_info.empty?
@@ -157,7 +161,7 @@ class JokeAnswerReply < TweetPattern
   end
 
   def build_tweet(status)
-    search_phrase = status.text.gsub(/ﾎﾞｯﾄｩ/, '').gsub(/[[:blank:]]/, '').gsub(/教えて/, '').strip
+    search_phrase = remove_to_bottou(text).gsub(/[[:blank:]]/, '').gsub(/教えて/, '').strip
     joke_answer = JokeAnswer.run(search_phrase)
 
     if joke_answer.nil?
