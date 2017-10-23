@@ -31,10 +31,10 @@ class WeatherForecast
   attr_reader :point
 
   def initialize(text)
-    @point = point(text)
+    @point = extract_point(text)
   end
 
-  def point(text)
+  def extract_point(text)
     text.gsub(/[今|明]日の/, '').gsub(/[[:blank:]]/, '').gsub(/の?天気教えて/, '').strip
   end
 
