@@ -42,7 +42,7 @@ class TweetPattern
     text.match(/.*ﾎﾞｯﾄｩ|ｳ.*/) != nil
   end
 
-  def self.remove_to_bottou(text)
+  def remove_to_bottou(text)
     text.gsub(/ﾎﾞｯﾄ[ｩ|ｳ]/, '')
   end
 end

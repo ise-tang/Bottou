@@ -8,7 +8,6 @@ class JokeAnswer
 
   def self.run(search_query)
     words = wordlize(search_query)
-    p words
     snippet = get_snippet(search_query)
     res = keyword(snippet)
     keys = JSON.parse(res)['keywords'].map { |hash| hash.keys.first }
