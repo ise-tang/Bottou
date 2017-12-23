@@ -12,7 +12,7 @@ class JokeAnswer
     res = keyword(snippet)
     keys = JSON.parse(res)['keywords'].map { |hash| hash.keys.first }
     keys.each do |key|
-      if !words.include?(key) && key != 'keyword'
+      if !words.include?(key) && !key.include?('keyword')
         return key
       end
     end
