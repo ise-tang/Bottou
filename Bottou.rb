@@ -99,6 +99,21 @@ class Bottou
     end
   end
 
+  def filter
+    topics = ["ﾎﾞｯﾄｩ", "ﾎﾞｯﾄｳ", "@itititititk"]
+    userstream_client.filter(track: topics.join(","))do |status|
+      puts status.user.screen_name
+      puts status.text
+      begin
+        tweet_pattern = TweetPatternFactory.build(status)
+        post_tweet(status, tweet_pattern) unless tweet_pattern.nil?
+      rescue => e
+        puts e.message
+        puts e.backtrace
+      end
+    end
+  end
+
   private
 
   def post_tweet(status, tweet_pattern)
