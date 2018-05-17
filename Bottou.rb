@@ -105,8 +105,8 @@ class Bottou
       puts status.user.screen_name
       puts status.text
       begin
-        #tweet_pattern = TweetPatternFactory.build(status)
-        #post_tweet(status, tweet_pattern) unless tweet_pattern.nil?
+        tweet_pattern = TweetPatternFactory.build(status)
+        post_tweet(status, tweet_pattern) unless tweet_pattern.nil?
       rescue => e
         puts e.message
         puts e.backtrace
