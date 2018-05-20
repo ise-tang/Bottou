@@ -10,7 +10,7 @@ class JokeAnswer
     words = wordlize(search_query)
     snippet = get_snippet(search_query)
     res = keyword(snippet)
-    keys = JSON.parse(res)['keywords'].map { |hash| hash.keys.first }
+    keys = JSON.parse(res)['keywords'].map { |hash| hash.keys.first.to_s }
     keys.each do |key|
       if !words.include?(key) && !key.include?('keyword')
         return key
