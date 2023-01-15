@@ -1,4 +1,4 @@
-require 'net/http'
+require 'http'
 require 'uri'
 require 'json'
 require 'securerandom'
@@ -33,25 +33,41 @@ def bearer_client
 end
 
 
+# def filter
+#   bearer_token = ENV['BEARER']
+#   p bearer_token
+#   stream_url = "https://api.twitter.com/2/tweets/search/stream"
+# 
+#   url = URI.parse(stream_url)
+#   request = Net::HTTP::Get.new(url.path)
+#   request['User-Agent'] = 'v2FilteredStreamRuby'
+#   request['Authorization'] = "Bearer #{bearer_token}"
+# 
+#   http =  Net::HTTP.new(url.host, url.port)
+#   http.use_ssl = true
+#   res = http.start do |http|
+#     http.request(request) do |response|
+#       raise 'Response is not chuncked' unless response.chunked?
+#       response.read_body do |chunk|
+#         p JSON.parse(chunk)
+#       end
+#     end
+#   end
+# end
+
 def filter
   bearer_token = ENV['BEARER']
   p bearer_token
+
   stream_url = "https://api.twitter.com/2/tweets/search/stream"
+  body = HTTP.auth("Bearer #{bearer_token}")
+             .headers('user-agent': 'v2FilteredStreamRuby')
+             .get(stream_url, params: {"start_time": '2023-01-14T14:00:00Z'})
+             #.get(stream_url)
 
-  url = URI.parse(stream_url)
-  request = Net::HTTP::Get.new(url.path)
-  request['User-Agent'] = 'v2FilteredStreamRuby'
-  request['Authorization'] = "Bearer #{bearer_token}"
-
-  http =  Net::HTTP.new(url.host, url.port)
-  http.use_ssl = true
-  res = http.start do |http|
-    http.request(request) do |response|
-      raise 'Response is not chuncked' unless response.chunked?
-      response.read_body do |chunk|
-        p JSON.parse(chunk)
-      end
-    end
+  p body
+  loop do
+    p JSON.parse(body.readpartial)
   end
 end
 
@@ -109,47 +125,50 @@ def post_rules
   
   #rules = follower_rules.map {|rule| {value: rule}}
  
-  payload = { add: [{ value: 'てすとてすと', tag: 'hoge'}]}
+  #payload = { add: [{ value: 'ウマ娘', tag: 'uma'}]}
   
-  request = Net::HTTP::Post.new(url.path)
-  request['User-Agent'] = 'v2FilteredStreamRuby'
-  request['Authorization'] = "Bearer #{bearer_token}"
-  request['Content-type'] = "application/json"
-  request.body = payload.to_json
+  #request = Net::HTTP::Post.new(url.path)
+  #request['User-Agent'] = 'v2FilteredStreamRuby'
+  #request['Authorization'] = "Bearer #{bearer_token}"
+  #request['Content-type'] = "application/json"
+  #request.body = payload.to_json
   
-  http =  Net::HTTP.new(url.host, url.port)
-  http.use_ssl = true
+  #http =  Net::HTTP.new(url.host, url.port)
+  #http.use_ssl = true
   
-  res = http.start do |h|
-    h.request(request)
-  end
+  #res = http.start do |h|
+  #  h.request(request)
+  #end
+  bearer_token = ENV['BEARER']
+  p bearer_token
+
+  payload = { add: [{ value: 'ウマ娘', tag: 'uma'}]}
+
+  res = HTTP.auth("Bearer #{bearer_token}")
+             .headers('user-agent': 'v2FilteredStreamRuby')
+             .post(rules_url, json: payload)
+
+
   
   puts res.body
   p res
+
 end
 
 def delete_rules(ids)
-  bearer_token = ENV['BEARER']
   rules_url = "https://api.twitter.com/2/tweets/search/stream/rules"
-  url = URI.parse(rules_url)
-  
-  
+  bearer_token = ENV['BEARER']
+  p bearer_token
+
   payload = { delete: {ids: ids} }
+
+  res = HTTP.auth("Bearer #{bearer_token}")
+             .headers('user-agent': 'v2FilteredStreamRuby')
+             .post(rules_url, json: payload)
+
+
   
-  request = Net::HTTP::Post.new(url.path)
-  request['User-Agent'] = 'v2FilteredStreamRuby'
-  request['Authorization'] = "Bearer #{bearer_token}"
-  request['Content-type'] = "application/json"
-  p payload.to_json
-  request.body = payload.to_json
-  
-  http =  Net::HTTP.new(url.host, url.port)
-  http.use_ssl = true
-  
-  res = http.start do |h|
-    h.request(request)
-  end
-  
+  puts res.body
   p res
 end
 
@@ -175,7 +194,7 @@ def recent_search
   bearer_client.get(url, query: 'from:issei126')
 end
 #post_rules
-filter
+#filter
 
 #puts oauth_signature('get', 'https://api.twitter.com/2/users/me', {}, {b: 1, a: 'ほげ'})
 
@@ -186,10 +205,12 @@ filter
 #friend_ids
 
 #p get_rules[:data].map{|d| d[:id]}
+#delete_rules(['1614549354584629248'])
 p get_rules
 
 #p get_user('simotakaido')
 
 #delete_rules(get_rules[:data].map{|d| d[:id]})
+
 
 #p (recent_search)
