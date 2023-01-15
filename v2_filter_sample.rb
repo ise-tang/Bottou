@@ -62,12 +62,21 @@ def filter
   stream_url = "https://api.twitter.com/2/tweets/search/stream"
   body = HTTP.auth("Bearer #{bearer_token}")
              .headers('user-agent': 'v2FilteredStreamRuby')
-             .get(stream_url, params: {"start_time": '2023-01-14T14:00:00Z'})
+             #.get(stream_url, params: {"tweet.fields": "created_at"})
+             #.get(stream_url, params: {"start_time": '2023-01-15T7:00:00Z', "tweet.fields": "created_at", "user.fields": 'id,username'})
+             .get(stream_url, params: {"user.fields": 'id,username', 'expansions': 'author_id'})
              #.get(stream_url)
 
   p body
   loop do
-    p JSON.parse(body.readpartial)
+    begin
+      str = body.readpartial
+      unless str == "\r\n"
+        p JSON.parse(str)
+      end
+    rescue => e
+      puts "ERROR: #{e.message}"
+    end
   end
 end
 
@@ -77,10 +86,21 @@ def me
   
 end
 
+def friends
+  url = 'https://api.twitter.com/1.1/friends/list.json'
+
+  #oauth_client.get(url, params: {user_id: '487348823'})
+  oauth_client.get(url, skip_status: true, count: 100)
+end
+
 def friend_ids
   url = 'https://api.twitter.com/2/users/487348823/followers?'
 
   oauth_client.get(url)[:data].map{|u| u[:id]}
+end
+
+def friend_usernames
+  friends[:users].map{|u| u[:screen_name]}
 end
 
 
@@ -88,25 +108,6 @@ def get_rules
   rules_url = "https://api.twitter.com/2/tweets/search/stream/rules"
 
   p bearer_client.get(rules_url)
-# url = URI.parse(rules_url)
-# 
-# p url.host
-# p url.port  
-# p url.path
-
-#request = Net::HTTP::Get.new(url.path)
-#request
-#request['User-Agent'] = 'v2FilteredStreamRuby'
-#request['Authorization'] = "Bearer #{bearer_token}"
-#
-#http =  Net::HTTP.new(url.host, url.port)
-#http.use_ssl = true
-#
-#res = http.start do |h|
-#  h.request(request)
-#end
-#
-#puts res.body
 end
 
 def post_rules
@@ -122,27 +123,14 @@ def post_rules
   rules_url = "https://api.twitter.com/2/tweets/search/stream/rules"
   url = URI.parse(rules_url)
   
-  
-  #rules = follower_rules.map {|rule| {value: rule}}
- 
-  #payload = { add: [{ value: 'ウマ娘', tag: 'uma'}]}
-  
-  #request = Net::HTTP::Post.new(url.path)
-  #request['User-Agent'] = 'v2FilteredStreamRuby'
-  #request['Authorization'] = "Bearer #{bearer_token}"
-  #request['Content-type'] = "application/json"
-  #request.body = payload.to_json
-  
-  #http =  Net::HTTP.new(url.host, url.port)
-  #http.use_ssl = true
-  
-  #res = http.start do |h|
-  #  h.request(request)
-  #end
   bearer_token = ENV['BEARER']
   p bearer_token
 
-  payload = { add: [{ value: 'ウマ娘', tag: 'uma'}]}
+  bodies = follower_rules.map { |rule| { value: rule, tag: 'followers'} }
+  #payload = { add: [{ value: 'ウマ娘', tag: 'uma'}]}
+  #payload = { add: [{ value: 'from:gizmodojapan', tag: 'giz'}]}
+  #payload = { add: [{ value: 'from:issei126', tag: 'me'}]}
+  payload = { add: bodies}
 
   res = HTTP.auth("Bearer #{bearer_token}")
              .headers('user-agent': 'v2FilteredStreamRuby')
@@ -174,7 +162,7 @@ end
 
 def follower_rules
   #p friend_ids.map {|id| "from:#{id}"}.each_slice(20).to_a.map {|ids| ids.join(' OR ') }
-  friend_ids.map {|id| "from:#{id}"}.each_slice(5).to_a.map {|ids| ids.join(' OR ') }
+  friend_usernames.map {|usernames| "from:#{usernames}"}.each_slice(5).to_a.map {|ids| ids.join(' OR ') }
 end
 
 def get_rules
@@ -193,24 +181,31 @@ def recent_search
 
   bearer_client.get(url, query: 'from:issei126')
 end
+
 #post_rules
-#filter
+filter
 
 #puts oauth_signature('get', 'https://api.twitter.com/2/users/me', {}, {b: 1, a: 'ほげ'})
 
 
 #me
 
-#post_rules
 #friend_ids
 
-#p get_rules[:data].map{|d| d[:id]}
-#delete_rules(['1614549354584629248'])
-p get_rules
+#p follower_rules
+#delete_rules(get_rules[:data].map{|d| d[:id]})
+#delete_rules(['1614576004235939848'])
+#post_rules
+#p get_rules
 
-#p get_user('simotakaido')
+#p get_user('issei126')
+#p get_user('issei126').to_json
+#p JSON.parse(get_user('issei126').to_json)
+
 
 #delete_rules(get_rules[:data].map{|d| d[:id]})
 
 
 #p (recent_search)
+
+#def json_pars
