@@ -1,6 +1,37 @@
 require 'net/http'
 require 'uri'
 require 'json'
+require 'securerandom'
+require 'openssl'
+require 'simple_oauth'
+require 'simple_twitter'
+
+def oauth_params
+  {
+    api_key: ENV['API_KEY'],
+    api_secret_key: ENV['API_KEY_SECRET'],
+    access_token: ENV['ACCESS_TOKEN'],
+    access_token_secret: ENV['ACCESS_TOKEN_SECRET']
+  }
+end
+
+def oauth_client
+  @oauth_client ||= SimpleTwitter::Client.new(
+    {
+      api_key: ENV['API_KEY'],
+      api_secret_key: ENV['API_KEY_SECRET'],
+      access_token: ENV['ACCESS_TOKEN'],
+      access_token_secret: ENV['ACCESS_TOKEN_SECRET']
+    }
+  )
+end
+
+def bearer_client
+  @bearer_client ||= SimpleTwitter::Client.new(
+    bearer_token: ENV['BEARER']
+  )
+end
+
 
 def filter
   bearer_token = ENV['BEARER']
@@ -18,15 +49,29 @@ def filter
     http.request(request) do |response|
       raise 'Response is not chuncked' unless response.chunked?
       response.read_body do |chunk|
-        p chunk
+        p JSON.parse(chunk)
       end
     end
   end
 end
 
+def me
+  me_url = "https://api.twitter.com/2/users/me"
+
+  
+end
+
+def friend_ids
+  url = 'https://api.twitter.com/2/users/487348823/followers?'
+
+  oauth_client.get(url)[:data].map{|u| u[:id]}
+end
+
 
 def get_rules
-# rules_url = "https://api.twitter.com/2/tweets/search/stream/rules"
+  rules_url = "https://api.twitter.com/2/tweets/search/stream/rules"
+
+  p bearer_client.get(rules_url)
 # url = URI.parse(rules_url)
 # 
 # p url.host
@@ -60,10 +105,37 @@ def post_rules
   #}
   rules_url = "https://api.twitter.com/2/tweets/search/stream/rules"
   url = URI.parse(rules_url)
+  
+  
+  #rules = follower_rules.map {|rule| {value: rule}}
+ 
+  payload = { add: [{ value: 'てすとてすと', tag: 'hoge'}]}
+  
+  request = Net::HTTP::Post.new(url.path)
+  request['User-Agent'] = 'v2FilteredStreamRuby'
+  request['Authorization'] = "Bearer #{bearer_token}"
+  request['Content-type'] = "application/json"
+  request.body = payload.to_json
+  
+  http =  Net::HTTP.new(url.host, url.port)
+  http.use_ssl = true
+  
+  res = http.start do |h|
+    h.request(request)
+  end
+  
+  puts res.body
+  p res
+end
 
-  rules = { 'value': 'apple' }
-  payload = { add: [rules]}
-
+def delete_rules(ids)
+  bearer_token = ENV['BEARER']
+  rules_url = "https://api.twitter.com/2/tweets/search/stream/rules"
+  url = URI.parse(rules_url)
+  
+  
+  payload = { delete: {ids: ids} }
+  
   request = Net::HTTP::Post.new(url.path)
   request['User-Agent'] = 'v2FilteredStreamRuby'
   request['Authorization'] = "Bearer #{bearer_token}"
@@ -78,8 +150,46 @@ def post_rules
     h.request(request)
   end
   
-  puts res.body
+  p res
 end
 
-# post_rules
+def follower_rules
+  #p friend_ids.map {|id| "from:#{id}"}.each_slice(20).to_a.map {|ids| ids.join(' OR ') }
+  friend_ids.map {|id| "from:#{id}"}.each_slice(5).to_a.map {|ids| ids.join(' OR ') }
+end
+
+def get_rules
+  bearer_client.get('https://api.twitter.com/2/tweets/search/stream/rules')
+end
+
+def get_user(name)
+  url = 'https://api.twitter.com/2/users/by'
+
+  bearer_client.get(url, usernames: name)
+end
+
+def recent_search
+  url = 'https://api.twitter.com/2/tweets/search/recent'
+
+
+  bearer_client.get(url, query: 'from:issei126')
+end
+#post_rules
 filter
+
+#puts oauth_signature('get', 'https://api.twitter.com/2/users/me', {}, {b: 1, a: 'ほげ'})
+
+
+#me
+
+#post_rules
+#friend_ids
+
+#p get_rules[:data].map{|d| d[:id]}
+p get_rules
+
+#p get_user('simotakaido')
+
+#delete_rules(get_rules[:data].map{|d| d[:id]})
+
+#p (recent_search)
