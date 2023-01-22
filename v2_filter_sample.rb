@@ -5,6 +5,7 @@ require 'securerandom'
 require 'openssl'
 require 'simple_oauth'
 require 'simple_twitter'
+require './tweet_pattern_factory.rb'
 
 def oauth_params
   {
@@ -32,47 +33,28 @@ def bearer_client
   )
 end
 
-
-# def filter
-#   bearer_token = ENV['BEARER']
-#   p bearer_token
-#   stream_url = "https://api.twitter.com/2/tweets/search/stream"
-# 
-#   url = URI.parse(stream_url)
-#   request = Net::HTTP::Get.new(url.path)
-#   request['User-Agent'] = 'v2FilteredStreamRuby'
-#   request['Authorization'] = "Bearer #{bearer_token}"
-# 
-#   http =  Net::HTTP.new(url.host, url.port)
-#   http.use_ssl = true
-#   res = http.start do |http|
-#     http.request(request) do |response|
-#       raise 'Response is not chuncked' unless response.chunked?
-#       response.read_body do |chunk|
-#         p JSON.parse(chunk)
-#       end
-#     end
-#   end
-# end
+Struct.new("User", :screen_name)
+Struct.new("Status", :text, :user)
 
 def filter
   bearer_token = ENV['BEARER']
-  p bearer_token
 
   stream_url = "https://api.twitter.com/2/tweets/search/stream"
   body = HTTP.auth("Bearer #{bearer_token}")
              .headers('user-agent': 'v2FilteredStreamRuby')
-             #.get(stream_url, params: {"tweet.fields": "created_at"})
-             #.get(stream_url, params: {"start_time": '2023-01-15T7:00:00Z', "tweet.fields": "created_at", "user.fields": 'id,username'})
              .get(stream_url, params: {"user.fields": 'id,username', 'expansions': 'author_id'})
-             #.get(stream_url)
 
-  p body
   loop do
     begin
       str = body.readpartial
       unless str == "\r\n"
-        p JSON.parse(str)
+        p str
+        json = JSON.parse(str)
+
+        user = Struct::User.new(json['includes']['users'][0]['username'])
+        status = Struct::Status.new(json['data']['text'], user)
+
+        p TweetPatternFactory.build(status)
       end
     rescue => e
       puts "ERROR: #{e.message}"
@@ -82,8 +64,6 @@ end
 
 def me
   me_url = "https://api.twitter.com/2/users/me"
-
-  
 end
 
 def friends
@@ -182,30 +162,5 @@ def recent_search
   bearer_client.get(url, query: 'from:issei126')
 end
 
-#post_rules
 filter
 
-#puts oauth_signature('get', 'https://api.twitter.com/2/users/me', {}, {b: 1, a: 'ほげ'})
-
-
-#me
-
-#friend_ids
-
-#p follower_rules
-#delete_rules(get_rules[:data].map{|d| d[:id]})
-#delete_rules(['1614576004235939848'])
-#post_rules
-#p get_rules
-
-#p get_user('issei126')
-#p get_user('issei126').to_json
-#p JSON.parse(get_user('issei126').to_json)
-
-
-#delete_rules(get_rules[:data].map{|d| d[:id]})
-
-
-#p (recent_search)
-
-#def json_pars
