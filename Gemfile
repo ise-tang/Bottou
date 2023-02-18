@@ -10,3 +10,6 @@ gem 'pry'
 
 gem 'http'
 gem 'dotenv'
+
+gem 'oauth'
+gem 'typhoeus'

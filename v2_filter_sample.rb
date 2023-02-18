@@ -6,13 +6,17 @@ require 'openssl'
 require 'simple_oauth'
 require 'simple_twitter'
 require './tweet_pattern_factory.rb'
+require 'typhoeus'
+require 'oauth/request_proxy/typhoeus_request'
+require 'oauth'
 
 def oauth_params
   {
-    api_key: ENV['API_KEY'],
-    api_secret_key: ENV['API_KEY_SECRET'],
-    access_token: ENV['ACCESS_TOKEN'],
-    access_token_secret: ENV['ACCESS_TOKEN_SECRET']
+    consumer_key: ENV['API_KEY'],
+    consumer_secret: ENV['API_KEY_SECRET'],
+    token: ENV['ACCESS_TOKEN'],
+    token_secret: ENV['ACCESS_TOKEN_SECRET'],
+    #version: '2.0'
   }
 end
 
@@ -106,11 +110,11 @@ def post_rules
   bearer_token = ENV['BEARER']
   p bearer_token
 
-  bodies = follower_rules.map { |rule| { value: rule, tag: 'followers'} }
-  #payload = { add: [{ value: 'ウマ娘', tag: 'uma'}]}
+  #bodies = follower_rules.map { |rule| { value: rule, tag: 'followers'} }
+  payload = { add: [{ value: 'ウマ娘', tag: 'uma'}]}
   #payload = { add: [{ value: 'from:gizmodojapan', tag: 'giz'}]}
   #payload = { add: [{ value: 'from:issei126', tag: 'me'}]}
-  payload = { add: bodies}
+  #payload = { add: bodies}
 
   res = HTTP.auth("Bearer #{bearer_token}")
              .headers('user-agent': 'v2FilteredStreamRuby')
@@ -162,5 +166,53 @@ def recent_search
   bearer_client.get(url, query: 'from:issei126')
 end
 
-filter
+def post1
+  pp oauth_client.post("https://api.twitter.com/1.1/statuses/update.json",
+    status: "Test.")
+end
+
+def post(tweet)
+  url = 'https://api.twitter.com/2/tweets'
+
+  params = {json: { :tweet => "test2"}}
+
+
+  res = HTTP.auth(auth_header('post', url, params))
+             .headers('user-agent': 'v2CreateTweetRuby')
+             .post(url, json: params)
+
+  pp res
+end
+
+def auth_header(method, url, params)
+  
+  SimpleOAuth::Header.new(method, url, params, oauth_params).to_s
+end
+
+def post 
+  consumer = OAuth::Consumer.new(oauth_params[:consumer_key], oauth_params[:consumer_secret])
+  access_token = OAuth::AccessToken.new(consumer, oauth_params[:token], oauth_params[:token_secret])
+  oauth_params = {:consumer => consumer, :token => access_token}
+  @json_payload = {text: 'test3'}
+  url = 'https://api.twitter.com/2/tweets'
+  options = {
+    :method => :post,
+    headers: {
+       "User-Agent": "v2CreateTweetRuby",
+      "content-type": "application/json"
+    },
+    body: JSON.dump(@json_payload)
+  }
+  request = Typhoeus::Request.new(url, options)
+  oauth_helper = OAuth::Client::Helper.new(request, oauth_params.merge(:request_uri => url))
+  request.options[:headers].merge!({"Authorization" => oauth_helper.header}) # Signs the request
+  response = request.run
+
+  puts response.code, JSON.pretty_generate(JSON.parse(response.body))
+end
+#post_rules
+#filter
+#post(nil)
+#post1
+post
 
