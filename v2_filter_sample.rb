@@ -184,25 +184,33 @@ def post(tweet)
   pp res
 end
 
-def auth_header(method, url, params)
-  
-  SimpleOAuth::Header.new(method, url, params, oauth_params).to_s
+def post(text)
+  twitter_request(
+    'https://api.twitter.com/2/tweets',
+    { text: text},
+    'post',
+    'v2CreateTweetRuby',
+    'application/json'
+  )
 end
 
-def post 
+def twitter_request(url, params, method, header, content_type)
   consumer = OAuth::Consumer.new(oauth_params[:consumer_key], oauth_params[:consumer_secret])
   access_token = OAuth::AccessToken.new(consumer, oauth_params[:token], oauth_params[:token_secret])
   oauth_params = {:consumer => consumer, :token => access_token}
-  @json_payload = {text: 'test3'}
-  url = 'https://api.twitter.com/2/tweets'
-  options = {
-    :method => :post,
-    headers: {
-       "User-Agent": "v2CreateTweetRuby",
-      "content-type": "application/json"
-    },
-    body: JSON.dump(@json_payload)
+
+  header_hash = {
+    "User-Agent": header 
   }
+  header_hash["content-type"] = content_type if content_type
+
+  options = {
+    :method => method,
+    headers: header_hash
+  }
+
+  options[:body] = JSON.dump(params) if params
+
   request = Typhoeus::Request.new(url, options)
   oauth_helper = OAuth::Client::Helper.new(request, oauth_params.merge(:request_uri => url))
   request.options[:headers].merge!({"Authorization" => oauth_helper.header}) # Signs the request
@@ -214,5 +222,5 @@ end
 #filter
 #post(nil)
 #post1
-post
+post('hogehoge')
 
