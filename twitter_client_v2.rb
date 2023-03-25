@@ -210,8 +210,8 @@ end
 #filter
 #post(nil)
 #post1
-tc = TwitterClient.new
-tc.post('てすとてすと!')
+#tc = TwitterClient.new
+#tc.post('てすとてすと!')
 
 #me
 

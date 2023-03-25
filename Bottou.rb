@@ -7,7 +7,8 @@ require 'cgi'
 require 'http'
 require 'json'
 require './weather_forecast.rb'
-require './joke_answer.rb'
+# TODO: mecabが必要なのでコメントアウト
+#require './joke_answer.rb'
 require './image_search.rb'
 require './markov.rb'
 require './tweet_pattern_factory.rb'
@@ -82,7 +83,7 @@ class Bottou
   def markov_tweet(markov)
     tweet_text = markov.build_tweet
     puts "twi: #{tweet_text}"
-    client.update(CGI.unescapeHTML(tweet_text))
+    client.post(CGI.unescapeHTML(tweet_text))
   end
 
   def userstream

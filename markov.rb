@@ -1,6 +1,6 @@
-require 'natto'
+# TODO: マルコフ辞書を生成するにはmecabをインストールしてコメントアウト
+# require 'natto'
 require 'csv'
-require 'twitter'
 
 class Markov
   attr_reader :client
@@ -10,8 +10,6 @@ class Markov
   end
 
   def build_tweet
-    natto = Natto::MeCab.new
-
     maruko = []
 
     CSV.foreach("./doc/maruko_dic.txt") do |csv|
