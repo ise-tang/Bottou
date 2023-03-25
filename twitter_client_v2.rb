@@ -40,21 +40,35 @@ class TwitterClient
     }
 
     options = {
-      timeout: 20,
+      timeout: 30,
       method: :get,
       headers: header_hash,
       params: params
     }
 
-    request = Typhoeus::Request.new(url, options)
+    timeout = 0
 
-    request.on_body do |chunk, response|
-      yield(JSON.parse(chunk))
+    loop do
+      request = Typhoeus::Request.new(url, options)
+
+      request.on_body do |chunk, response|
+        begin
+          json = JSON.parse(chunk)
+
+          user = Struct::User.new(json['includes']['users'][0]['username'])
+          status = Struct::Status.new(json['data']['id'], json['data']['text'], user)
+
+          yield(status)
+        rescue JSON::ParserError => e
+          p "JSON Parser Error: #{e.message}"
+        end
+      end
+
+      response = request.run
+
+      sleep 2 ** timeout
+      timeout += 1
     end
-
-    response = request.run
-    p "An error occurred : #{response.status_message}" unless response.success?
-    p response
     
   end
 
@@ -66,10 +80,10 @@ class TwitterClient
       "user.fields": "created_at,description"
     }
     method = 'get'
-    header = "v2UserLookupRuby"
+    user_agent = "v2UserLookupRuby"
     content = 'application/json'
 
-    twitter_request(me_url, query_params, method, header, content)
+    twitter_request(me_url, method, user_agent, content, query_params: query_params)
   end
 
   def friends
@@ -157,39 +171,66 @@ class TwitterClient
     bearer_client.get(url, query: 'from:issei126')
   end
 
-  def post(text, additional_params)
+  def post(text, additional_params = nil)
     params = { text: text }
     params.merge!(additional_params) if additional_params
     twitter_request(
       'https://api.twitter.com/2/tweets',
-      params,
       'post',
       'v2CreateTweetRuby',
-      'application/json'
+      'application/json',
+      json_params: params
     )
   end
 
-  def twitter_request(url, params, method, header, content_type)
+  def mentions_timeline(additional_params = nil)
+    url = 'https://api.twitter.com/2/users/487348823/mentions'
+    
+    method = 'get'
+    user_agent = "v2MentionTimelineRuby"
+    content = 'application/json'
+
+    params = {"user.fields": 'username', 'expansions': 'author_id'}
+    params.merge!(additional_params) if additional_params
+
+    p mentions = twitter_request(url, method, user_agent, content, query_params: params)
+
+    return [] if mentions['meta']['result_count'] == 0
+
+    mentions['data'].map do |mention|
+      username = mentions['includes']['users'].find { |user| user['id'] == mention['author_id'] }["username"]
+      user = Struct::User.new(username)
+      status = Struct::Status.new(mention['id'], mention['text'], user)
+    end
+  end
+
+  def twitter_request(url, method, user_agent, content_type, query_params:nil, json_params: nil)
     consumer = OAuth::Consumer.new(oauth_params[:consumer_key], oauth_params[:consumer_secret])
     access_token = OAuth::AccessToken.new(consumer, oauth_params[:token], oauth_params[:token_secret])
     oauth_params = {:consumer => consumer, :token => access_token}
 
     header_hash = {
-      "User-Agent": header 
+      "User-Agent": user_agent
     }
     header_hash["content-type"] = content_type if content_type
 
     options = {
-      :method => method,
+      method: method,
       headers: header_hash
     }
 
-    options[:body] = JSON.dump(params) if params
+    options[:params] = query_params if query_params
+    options[:body] = JSON.dump(json_params) if json_params
 
     request = Typhoeus::Request.new(url, options)
     oauth_helper = OAuth::Client::Helper.new(request, oauth_params.merge(:request_uri => url))
     request.options[:headers].merge!({"Authorization" => oauth_helper.header}) # Signs the request
     response = request.run
+
+    unless response.success?
+      p response
+      raise 'ERROR'
+    end
 
     puts response.code, JSON.pretty_generate(JSON.parse(response.body))
 

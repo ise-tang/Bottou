@@ -48,11 +48,12 @@ class Bottou
     end
 
     if last_reply_id.nil?
-      mentions = client.mentions_timeline({ :count => 1 })
+      mentions = [client.mentions_timeline({ :max_results => 5 }).first]
     else
       mentions = client.mentions_timeline({ :since_id => last_reply_id })
     end
     targetUser = %w[issei126 itititk __KRS__ ititititk aki_fc3s SnowMonkeyYu1 Sukonjp heizel_2525 yanma_sh mayucpo asasasa2525 masaloop_S2S goaa99 hito224 gen_233 mi3pu pu_kingdom]
+
     mentions.each {|m| puts m.text }
     #if lastMention.user.screen_name == 'issei126' then
     unless mentions.first.nil?
@@ -75,9 +76,13 @@ class Bottou
     doc_file = "#{File.dirname(File.expand_path(__FILE__))}/doc/reply_doc.txt"
     phrases = File.readlines(doc_file, encoding: 'UTF-8').each { |line| line.chomp! }
     phrase = phrases[rand(phrases.size)]
-    client.update("#{phrase} RT @#{mention.user.screen_name} #{CGI.unescapeHTML(mention.text)}",
-                  {:in_reply_to_status => mention,
-                   :in_reply_to_status_id => mention.id})
+    client.post("#{phrase} RT @#{mention.user.screen_name} #{CGI.unescapeHTML(mention.text)}",
+                  {
+                     reply: {
+                       :in_reply_to_tweet_id => mention.id
+                     }
+                  }
+               )
   end
 
   def markov_tweet(markov)
@@ -87,22 +92,14 @@ class Bottou
   end
 
   def filter
-    timeout = 0
-    while true
-      client.filter do |json|
-        begin
-          p user = Struct::User.new(json['includes']['users'][0]['username'])
-          p status = Struct::Status.new(json['data']['id'], json['data']['text'], user)
-
-          tweet_pattern = TweetPatternFactory.build(status)
-          p tweet_pattern
-          post_tweet(status, tweet_pattern) unless tweet_pattern.nil?
-        rescue => e
-          puts "ERROR: #{e.message}"
-        end
+    client.filter do |status|
+      begin
+        tweet_pattern = TweetPatternFactory.build(status)
+        p tweet_pattern
+        post_tweet(status, tweet_pattern) unless tweet_pattern.nil?
+      rescue => e
+        puts "ERROR: #{e.message}"
       end
-      sleep 2 ** timeout
-      timeout += 1
     end
   end
 
