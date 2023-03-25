@@ -118,7 +118,7 @@ class SearchReply < TweetPattern
 
   def build_tweet(status)
     search_word = remove_to_bottou(status.text).gsub(/[\[|［]検索[\]|］]/, '').gsub(/@\w+/, '').strip
-    "@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode(search_word)}"
+    "@#{status.user.screen_name} #{search_word}の検索結果: #{GOOGLE_SEARCH_URL_BASE}#{URI.encode_www_form_component(search_word)}"
   end
 end
 

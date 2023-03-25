@@ -86,32 +86,23 @@ class Bottou
     client.post(CGI.unescapeHTML(tweet_text))
   end
 
-  def userstream
-    userstream_client.userstream do |status|
-      puts status.user.screen_name
-      puts status.text
-      begin
-        tweet_pattern = TweetPatternFactory.build(status)
-        post_tweet(status, tweet_pattern) unless tweet_pattern.nil?
-      rescue => e
-        puts e.message
-        puts e.backtrace
-      end
-    end
-  end
-
   def filter
-    ids = client.friend_ids.to_h[:ids].join(',')
-    userstream_client.filter(follow: ids) do |status|
-      puts status.user.screen_name
-      puts status.text
-      begin
-        tweet_pattern = TweetPatternFactory.build(status)
-        post_tweet(status, tweet_pattern) unless tweet_pattern.nil?
-      rescue => e
-        puts e.message
-        puts e.backtrace
+    timeout = 0
+    while true
+      client.filter do |json|
+        begin
+          p user = Struct::User.new(json['includes']['users'][0]['username'])
+          p status = Struct::Status.new(json['data']['id'], json['data']['text'], user)
+
+          tweet_pattern = TweetPatternFactory.build(status)
+          p tweet_pattern
+          post_tweet(status, tweet_pattern) unless tweet_pattern.nil?
+        rescue => e
+          puts "ERROR: #{e.message}"
+        end
       end
+      sleep 2 ** timeout
+      timeout += 1
     end
   end
 
@@ -129,10 +120,13 @@ class Bottou
       return
     end
 
-    client.update(
+    client.post(
       tweet_pattern.tweet,
-      in_reply_to_status: status,
-      in_reply_to_status_id: status.id
+      {
+        reply: {
+          in_reply_to_tweet_id: status.id
+        }
+      }
     )
   end
 end
