@@ -18,47 +18,51 @@ class TwitterClient
     }
   end
 
-  def oauth_client
-    @oauth_client ||= SimpleTwitter::Client.new(
-      {
-        api_key: ENV['API_KEY'],
-        api_secret_key: ENV['API_KEY_SECRET'],
-        access_token: ENV['ACCESS_TOKEN'],
-        access_token_secret: ENV['ACCESS_TOKEN_SECRET']
-      }
-    )
-  end
+  def filtr_use
+    filter do |json|
+      begin
+        user = Struct::User.new(json['includes']['users'][0]['username'])
+        status = Struct::Status.new(json['data']['text'], user)
 
-  def bearer_client
-    @bearer_client ||= SimpleTwitter::Client.new(
-      bearer_token: ENV['BEARER']
-    )
+        p TweetPatternFactory.build(status)
+      rescue => e
+        puts "ERROR: #{e.message}"
+      end
+    end
   end
 
   def filter
     bearer_token = ENV['BEARER']
 
-    stream_url = "https://api.twitter.com/2/tweets/search/stream"
-    body = HTTP.auth("Bearer #{bearer_token}")
-              .headers('user-agent': 'v2FilteredStreamRuby')
-              .get(stream_url, params: {"user.fields": 'id,username', 'expansions': 'author_id'})
+    url = "https://api.twitter.com/2/tweets/search/stream"
+    params = {"user.fields": 'id,username', 'expansions': 'author_id'}
 
-    loop do
-      begin
-        str = body.readpartial
-        unless str == "\r\n"
-          p str
-          json = JSON.parse(str)
+    consumer = OAuth::Consumer.new(oauth_params[:consumer_key], oauth_params[:consumer_secret])
+    access_token = OAuth::AccessToken.new(consumer, oauth_params[:token], oauth_params[:token_secret])
+    oauth_params = {:consumer => consumer, :token => access_token}
 
-          user = Struct::User.new(json['includes']['users'][0]['username'])
-          status = Struct::Status.new(json['data']['text'], user)
+    header_hash = {
+      "User-Agent": 'v2FilteredStreamRuby',
+      "Authorization": "Bearer #{bearer_token}",
+      "Content-type": "application/json"
 
-          p TweetPatternFactory.build(status)
-        end
-      rescue => e
-        puts "ERROR: #{e.message}"
-      end
+    }
+
+    options = {
+      timeout: 20,
+      method: :get,
+      headers: header_hash
+    }
+
+    options[:body] = JSON.dump(params) if params
+
+    request = Typhoeus::Request.new(url, options)
+
+    request.on_body do |chunk|
+      yield(JSON.parse(chunk)
     end
+
+    response = request.run
   end
 
   def me
@@ -101,35 +105,25 @@ class TwitterClient
 
   def post_rules
     bearer_token = ENV['BEARER']
-    #params = {
-    #  "expansions": "attachments.poll_ids,attachments.media_keys,author_id,entities.mentions.username,geo.place_id,in_reply_to_user_id,referenced_tweets.id,referenced_tweets.id.author_id",
-    #  "tweet.fields": "attachments,author_id,conversation_id,created_at,entities,geo,id,in_reply_to_user_id,lang",
-    #  # "user.fields": "description",
-    #  # "media.fields": "url", 
-    #  # "place.fields": "country_code",
-    #  # "poll.fields": "options"
-    #}
     rules_url = "https://api.twitter.com/2/tweets/search/stream/rules"
-    url = URI.parse(rules_url)
     
-    bearer_token = ENV['BEARER']
-    p bearer_token
-
     #bodies = follower_rules.map { |rule| { value: rule, tag: 'followers'} }
     payload = { add: [{ value: 'ウマ娘', tag: 'uma'}]}
     #payload = { add: [{ value: 'from:gizmodojapan', tag: 'giz'}]}
     #payload = { add: [{ value: 'from:issei126', tag: 'me'}]}
     #payload = { add: bodies}
 
-    res = HTTP.auth("Bearer #{bearer_token}")
-              .headers('user-agent': 'v2FilteredStreamRuby')
-              .post(rules_url, json: payload)
+    options = {
+      headers: {
+        "User-Agent": "v2FilteredStreamRuby",
+        "Authorization": "Bearer #{bearer_token}",
+        "Content-type": "application/json"
+      },
+      body: JSON.dump(payload)
+    }
 
-
-    
-    puts res.body
-    p res
-
+    @response = Typhoeus.post(rules_url, options)
+    raise "An error occurred while adding rules: #{@response.status_message}" unless @response.success?
   end
 
   def delete_rules(ids)
@@ -144,7 +138,6 @@ class TwitterClient
               .post(rules_url, json: payload)
 
 
-    
     puts res.body
     p res
   end
@@ -206,12 +199,4 @@ class TwitterClient
     puts response.code, JSON.pretty_generate(JSON.parse(response.body))
   end
 end
-#post_rules
-#filter
-#post(nil)
-#post1
-#tc = TwitterClient.new
-#tc.post('てすとてすと!')
-
-#me
 
