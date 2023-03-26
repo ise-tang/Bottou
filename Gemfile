@@ -13,3 +13,5 @@ gem 'dotenv'
 
 gem 'oauth'
 gem 'typhoeus'
+
+gem 'whenever', require: false
