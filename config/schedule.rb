@@ -20,6 +20,6 @@
 # Learn more: http://github.com/javan/whenever
 
 every 5.minutes do
-  command 'bundle exec ruby markov_tweet.rb'
-  command 'bundle exec ruby Bottou_reply.rb'
+  command 'bundle exec ruby /home/issei/Bottou/markov_tweet.rb'
+  command 'bundle exec ruby /home/issei/Bottou/Bottou_reply.rb'
 end
