@@ -20,6 +20,6 @@
 # Learn more: http://github.com/javan/whenever
 
 every 3.minutes do
-  command 'cd /home/issei/Bottou && bundle exec ruby markov_tweet.rb >> /home/issei/Bottou/markov_log'
-  command 'cd /home/issei/Bottou && bundle exec ruby Bottou_reply.rb >> /home/issei/Bottou/reply_log'
+  command 'cd /home/issei/Bottou && bundle exec ruby markov_tweet.rb >> /home/issei/Bottou/log/markov_log'
+  command 'cd /home/issei/Bottou && bundle exec ruby Bottou_reply.rb >> /home/issei/Bottou/log/reply_log'
 end
