@@ -40,7 +40,6 @@ class TwitterClient
     }
 
     options = {
-      timeout: 30,
       method: :get,
       headers: header_hash,
       params: params
