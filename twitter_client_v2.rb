@@ -51,15 +51,20 @@ class TwitterClient
       request = Typhoeus::Request.new(url, options)
 
       request.on_body do |chunk, response|
+        puts "=== #{Time.now} ==="
         begin
-          json = JSON.parse(chunk)
+          unless chunk == "\r\n"
+            json = JSON.parse(chunk)
 
-          user = Struct::User.new(json['includes']['users'][0]['username'])
-          status = Struct::Status.new(json['data']['id'], json['data']['text'], user)
+            user = Struct::User.new(json['includes']['users'][0]['username'])
+            status = Struct::Status.new(json['data']['id'], json['data']['text'], user)
 
-          yield(status)
+            yield(status)
+          end
         rescue JSON::ParserError => e
           p "JSON Parser Error: #{e.message}"
+        rescue StandardError => e
+          p "ERROR: #{e.message}"
         end
       end
 
