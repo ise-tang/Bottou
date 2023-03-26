@@ -19,7 +19,7 @@
 
 # Learn more: http://github.com/javan/whenever
 
-every 5.minutes do
-  command 'bundle exec ruby /home/issei/Bottou/markov_tweet.rb'
-  command 'bundle exec ruby /home/issei/Bottou/Bottou_reply.rb'
+every 3.minutes do
+  command 'bundle exec ruby /home/issei/Bottou/markov_tweet.rb >> /home/issei/Bottou/markov_log'
+  command 'bundle exec ruby /home/issei/Bottou/Bottou_reply.rb >> /home/issei/Bottou/reply_log'
 end
