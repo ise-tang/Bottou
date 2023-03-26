@@ -40,7 +40,7 @@ class Bottou
   def reply()
     begin
       last_reply_id = File.open('last_reply_id.txt') do |file|
-        file.read
+        file.read.chomp
       end
     rescue => e
       puts e.message
