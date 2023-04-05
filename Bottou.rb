@@ -99,6 +99,7 @@ class Bottou
         post_tweet(status, tweet_pattern) unless tweet_pattern.nil?
       rescue => e
         puts "ERROR: #{e.message}"
+        p e.backtrace
       end
     end
   end

@@ -59,6 +59,8 @@ class TwitterClient
             user = Struct::User.new(json['includes']['users'][0]['username'])
             status = Struct::Status.new(json['data']['id'], json['data']['text'], user)
 
+            p status
+
             yield(status)
           end
         rescue JSON::ParserError => e
@@ -91,9 +93,9 @@ class TwitterClient
   end
 
   def friends
-    url = 'https://api.twitter.com/2/users/487348823/followers'
+    url = 'https://api.twitter.com/2/users/487348823/following'
 
-    res = twitter_request(url, nil , :get, 'v2FriendsRuby', 'application/json')
+    res = twitter_request(url, :get, 'v2FriendsRuby', 'application/json')
     res['data']
   end
 
@@ -159,7 +161,7 @@ class TwitterClient
 
   def follower_rules
     #p friend_ids.map {|id| "from:#{id}"}.each_slice(20).to_a.map {|ids| ids.join(' OR ') }
-    friend_usernames.map {|usernames| "from:#{usernames}"}.each_slice(5).to_a.map {|ids| ids.join(' OR ') }
+    friend_usernames.map {|usernames| "from:#{usernames}"}.each_slice(10).to_a.map {|ids| ids.join(' OR ') }
   end
 
   def get_user(name)
