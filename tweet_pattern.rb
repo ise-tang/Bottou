@@ -1,5 +1,5 @@
 require './image_search.rb'
-#require './snow_monkey_retweeter.rb'
+require './snow_monkey_retweeter.rb'
 require 'http'
 
 # base tweet pattern class

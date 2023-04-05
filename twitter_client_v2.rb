@@ -240,5 +240,34 @@ class TwitterClient
 
     JSON.parse(response.body)
   end
-end
 
+  def retweet(tweet_id)
+    url = "https://api.twitter.com/2/users/487348823/retweets"
+    method = 'post'
+    user_agent = "v2RetweetRuby"
+    content = 'application/json'
+    params = {tweet_id: tweet_id}
+
+    twitter_request(
+      url,
+      method,
+      user_agent,
+      content,
+      json_params: params
+    )
+  end
+
+  def unretweet(tweet_id)
+    url = "https://api.twitter.com/2/users/487348823/retweets/#{tweet_id}"
+    method = 'delete'
+    user_agent = "v2UnRetweetRuby"
+    content = 'application/json'
+
+    twitter_request(
+      url,
+      method,
+      user_agent,
+      content,
+    )
+  end
+end
